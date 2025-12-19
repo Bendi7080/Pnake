@@ -3047,6 +3047,110 @@ game.scene.add('WorkshopScene', WorkshopScene);
  * КОНЕЦ КОДА.
  * Твой мир PNAKE официально завершен.
  */ 
+    /**
+ * ============================================================================
+ * МОДУЛЬ 21: РЕГИСТРАЦИЯ И ИСПРАВЛЕНИЕ АВТОРИЗАЦИИ
+ * ============================================================================
+ */
+
+class AuthSystem {
+    // Функция регистрации нового игрока
+    static async register(nick) {
+        if (!nick || nick.length < 3) return alert("Ник слишком короткий!");
+        
+        const userRef = App.db.ref(`users/${nick}`);
+        const snap = await userRef.get();
+
+        if (snap.exists()) {
+            return alert("Этот ник уже занят! Выберите другой или войдите.");
+        }
+
+        // Создаем чистый профиль для нового игрока
+        const newUser = {
+            nick: nick,
+            coins: 50, // Стартовый бонус
+            total: 0,
+            warns: 0,
+            reputation: 0,
+            mana: 100,
+            inventory: [],
+            petLevel: 1,
+            body: 'default',
+            bodyShape: 'rect',
+            isAdmin: false // По умолчанию все игроки
+        };
+
+        await userRef.set(newUser);
+        alert("Регистрация успешна! Теперь нажмите 'Войти'.");
+    }
+
+    // Функция входа
+    static async login(nick, scene) {
+        const snap = await App.db.ref(`users/${nick}`).get();
+        
+        if (!snap.exists()) {
+            let confirmReg = confirm("Игрок не найден. Хотите зарегистрировать ник " + nick + "?");
+            if (confirmReg) {
+                await this.register(nick);
+            }
+            return;
+        }
+
+        // Если игрок найден, загружаем его данные
+        App.user = snap.val();
+        App.user.nick = nick; // На всякий случай фиксируем ник
+        
+        // Проверка на бан
+        const banSnap = await App.db.ref(`banned/${nick}`).get();
+        if (banSnap.exists()) {
+            return alert("Ваш аккаунт заблокирован: " + banSnap.val().reason);
+        }
+
+        alert("Добро пожаловать, " + nick + "!");
+        scene.scene.start('MenuScene'); // Переход в игру
+    }
+}
+
+/**
+ * ПЕРЕПИСЫВАЕМ СЦЕНУ ВХОДА (BOOT SCENE)
+ */
+BootScene.prototype.create = function() {
+    const cx = 180;
+    this.add.text(cx, 150, "PNAKE ONLINE", { fontSize: '32px', fill: '#00ffff', fontStyle: 'bold' }).setOrigin(0.5);
+    
+    // Поле ввода ника (через prompt или HTML input)
+    let loginBtn = this.add.rectangle(cx, 300, 200, 50, 0x00ff00, 0.2).setInteractive().setStrokeStyle(2, 0x00ff00);
+    this.add.text(cx, 300, "ВОЙТИ", { fontSize: '20px' }).setOrigin(0.5);
+
+    let regBtn = this.add.rectangle(cx, 370, 200, 50, 0x00ffff, 0.2).setInteractive().setStrokeStyle(2, 0x00ffff);
+    this.add.text(cx, 370, "РЕГИСТРАЦИЯ", { fontSize: '20px' }).setOrigin(0.5);
+
+    // Логика кнопки войти
+    loginBtn.on('pointerdown', () => {
+        let nick = prompt("Введите ваш ник для входа:");
+        if (nick) AuthSystem.login(nick, this);
+    });
+
+    // Логика кнопки регистрации
+    regBtn.on('pointerdown', () => {
+        let nick = prompt("Придумайте ник (минимум 3 символа):");
+        if (nick) AuthSystem.register(nick);
+    });
+
+    // Визуальный эффект при наведении
+    [loginBtn, regBtn].forEach(btn => {
+        btn.on('pointerover', () => btn.setAlpha(0.8));
+        btn.on('pointerout', () => btn.setAlpha(1));
+    });
+};
+
+// Фикс сохранения: теперь App.save() отправляет данные строго по нику в Firebase
+App.save = function() {
+    if (App.user && App.user.nick) {
+        App.db.ref(`users/${App.user.nick}`).update(App.user);
+        console.log("Данные игрока синхронизированы с облаком.");
+    }
+};
 </script>
 </body>
 </html>
