@@ -134,60 +134,147 @@ class MenuScene extends Phaser.Scene {
         }
     }
 }
-
+/** 4. ИГРОВАЯ МЕХАНИКА (ЗМЕЙКА) **/
 class GameScene extends Phaser.Scene {
     constructor() { super('GameScene'); }
+
     create() {
         const { width, height } = this.scale;
-        document.getElementById('chat-ui').style.opacity = "0.3"; // Полупрозрачный чат в игре
-        this.score = 0;
-        this.snake = [{x:10, y:10}];
-        this.dir = {x:1, y:0};
-        this.food = {x:15, y:15};
+        document.getElementById('chat-ui').style.opacity = "0.3"; 
 
-        this.time.addEvent({ delay: 150, callback: this.move, callbackScope: this, loop: true });
+        // Настройки поля
+        this.gridSize = 20;
+        this.score = 0;
         
-        // Управление в зависимости от настроек
-        this.input.on('pointerdown', (p) => {
-            if(p.x < width/3) this.dir = {x:-1, y:0};
-            else if(p.x > width*2/3) this.dir = {x:1, y:0};
-            else if(p.y < height/2) this.dir = {x:0, y:-1};
-            else this.dir = {x:0, y:1};
+        // Создаем змейку (голова + тело)
+        this.snake = [
+            {x: 10, y: 15},
+            {x: 10, y: 16},
+            {x: 10, y: 17}
+        ];
+        
+        this.dir = {x: 0, y: -1}; // Начальное направление: вверх
+        this.nextDir = {x: 0, y: -1};
+        
+        // Еда
+        this.spawnFood();
+
+        // Отрисовка
+        this.snakeGroup = this.add.group();
+        this.apple = this.add.circle(0, 0, 8, 0xff0000).setStrokeStyle(2, 0xffffff);
+        
+        // Интерфейс счета
+        this.scoreText = this.add.text(10, 40, `СЧЕТ: 0`, { fontSize: '20px', fill: '#ffb6c1' });
+
+        // Таймер движения (скорость змейки)
+        this.moveTimer = this.time.addEvent({
+            delay: 150, 
+            callback: this.updateSnake,
+            callbackScope: this,
+            loop: true
         });
 
-        this.parts = this.add.group();
-        this.apple = this.add.circle(0,0, 8, 0xff0000);
-        
-        this.add.text(20, 20, "ВЫХОД", {fill:'#f00'}).setInteractive().on('pointerdown', () => {
+        // Управление ТАПАМИ (делим экран на 4 зоны)
+        this.input.on('pointerdown', (p) => {
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            if (Math.abs(p.x - centerX) > Math.abs(p.y - centerY)) {
+                // Горизонтальное движение
+                if (p.x > centerX && this.dir.x === 0) this.nextDir = {x: 1, y: 0};
+                else if (p.x < centerX && this.dir.x === 0) this.nextDir = {x: -1, y: 0};
+            } else {
+                // Вертикальное движение
+                if (p.y > centerY && this.dir.y === 0) this.nextDir = {x: 0, y: 1};
+                else if (p.y < centerY && this.dir.y === 0) this.nextDir = {x: 0, y: -1};
+            }
+        });
+
+        // Кнопка выхода
+        let exitBtn = this.add.text(width - 70, 20, "ВЫХОД", { fill: '#ff4444', fontSize: '18px', fontWeight: 'bold' }).setInteractive();
+        exitBtn.on('pointerdown', () => {
             document.getElementById('chat-ui').style.opacity = "1";
             this.scene.start('MenuScene');
         });
     }
 
-    move() {
-        let h = { x: this.snake[0].x + this.dir.x, y: this.snake[0].y + this.dir.y };
-        if(h.x < 0 || h.x > 18 || h.y < 0 || h.y > 30) return this.gameOver();
-        
-        this.snake.unshift(h);
-        if(h.x === this.food.x && h.y === this.food.y) {
+    spawnFood() {
+        this.food = {
+            x: Phaser.Math.Between(1, 17),
+            y: Phaser.Math.Between(4, 28)
+        };
+    }
+
+    updateSnake() {
+        this.dir = this.nextDir;
+        let head = { x: this.snake[0].x + this.dir.x, y: this.snake[0].y + this.dir.y };
+
+        // Проверка столкновения со стенами
+        if (head.x < 0 || head.x >= 18 || head.y < 3 || head.y >= 32) {
+            return this.gameOver();
+        }
+
+        // Проверка столкновения с собой
+        if (this.snake.some(part => part.x === head.x && part.y === head.y)) {
+            return this.gameOver();
+        }
+
+        this.snake.unshift(head);
+
+        // Проверка: съели ли еду
+        if (head.x === this.food.x && head.y === this.food.y) {
             this.score += 10;
-            App.user.coins += 1;
-            this.food = { x: Phaser.Math.Between(1,17), y: Phaser.Math.Between(1,29) };
+            this.scoreText.setText(`СЧЕТ: ${this.score}`);
+            App.user.coins += 2; // Даем монеты за еду
+            this.spawnFood();
+            // Эффект вспышки при еде
+            this.cameras.main.flash(100, 255, 182, 193, 0.2);
         } else {
             this.snake.pop();
         }
 
-        this.parts.clear(true, true);
-        this.snake.forEach(p => this.parts.add(this.add.rectangle(p.x*20, p.y*20, 18, 18, 0xffb6c1)));
-        this.apple.setPosition(this.food.x*20, this.food.y*20);
+        this.draw();
+    }
+
+    draw() {
+        this.snakeGroup.clear(true, true);
+        this.snake.forEach((p, i) => {
+            let color = (i === 0) ? 0xff69b4 : 0xffb6c1; // Голова ярче
+            let part = this.add.rectangle(p.x * 20 + 10, p.y * 20 + 10, 18, 18, color);
+            this.snakeGroup.add(part);
+        });
+        this.apple.setPosition(this.food.x * 20 + 10, this.food.y * 20 + 10);
     }
 
     gameOver() {
-        if(this.score > App.user.highScore) { App.user.highScore = this.score; App.save(); }
+        if (this.score > App.user.highScore) {
+            App.user.highScore = this.score;
+        }
+        App.save();
         document.getElementById('chat-ui').style.opacity = "1";
+        alert(`ИГРА ОКОНЧЕНА! ВАШ СЧЕТ: ${this.score}`);
         this.scene.start('MenuScene');
     }
 }
+
+/** 5. ИСПРАВЛЕННАЯ АДМИНКА (ДЛЯ SAMIRA) **/
+class AdminScene extends Phaser.Scene {
+    constructor() { super('AdminScene'); }
+    create() {
+        const { width, height } = this.scale;
+        this.add.text(width/2, 100, "ПАНЕЛЬ SAMIRA", { fontSize: '28px', fill: '#ffb6c1' }).setOrigin(0.5);
+
+        let btn = this.add.rectangle(width/2, 250, 250, 60, 0x333333).setStrokeStyle(2, 0xffb6c1).setInteractive();
+        this.add.text(width/2, 250, "ЧИТ: +5000 МОНЕТ").setOrigin(0.5);
+
+        btn.on('pointerdown', () => {
+            App.user.coins += 5000;
+            App.save();
+            alert("МОНЕТЫ ДОБАВЛЕНЫ, ХОЗЯЙКА!");
+            this.scene.start('MenuScene');
+        });
+
+        this.add.text(width/
 
 class ShopScene extends Phaser.Scene {
     constructor() { super('ShopScene'); }
