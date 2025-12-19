@@ -1,93 +1,133 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PNAKE FIX</title>
+    <title>PNAKE: LEGENDS ULTIMATE</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        body { margin: 0; background: #000; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; }
-        .auth-card { border: 2px solid #ffb6c1; padding: 30px; border-radius: 20px; text-align: center; background: #111; }
-        input { display: block; width: 200px; padding: 12px; margin: 10px auto; border-radius: 8px; border: 1px solid #333; background: #000; color: #fff; }
-        button { background: #ffb6c1; color: #000; border: none; padding: 12px 30px; border-radius: 20px; font-weight: bold; cursor: pointer; width: 100%; }
-        .hidden { display: none; }
-        #game-msg { color: #ffb6c1; font-size: 24px; text-align: center; }
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; touch-action: none; color: white; }
+        #game-container { width: 100vw; height: 100vh; display: block; }
+        .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle, #1a1a1a, #000); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .auth-card { background: rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 30px; border: 2px solid #ffb6c1; text-align: center; box-shadow: 0 0 30px rgba(255, 182, 193, 0.2); width: 280px; }
+        input { display: block; width: 100%; padding: 15px; margin: 15px 0; border-radius: 12px; border: 1px solid #333; background: #111; color: white; outline: none; box-sizing: border-box; }
+        input:focus { border-color: #ffb6c1; }
+        button { width: 100%; padding: 15px; border-radius: 30px; border: none; background: linear-gradient(45deg, #ffb6c1, #ff69b4); color: white; font-weight: bold; cursor: pointer; font-size: 18px; box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3); }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen">
+    <div id="auth-screen" class="ui-screen">
         <div class="auth-card">
-            <h2 style="color:#ffb6c1">PNAKE LOGIN</h2>
-            <input type="text" id="nick" placeholder="НИКНЕЙМ">
+            <h1 style="color:#ffb6c1; margin-bottom: 25px; letter-spacing: 5px;">PNAKE</h1>
+            <input type="text" id="nick" placeholder="НИКНЕЙМ" autocomplete="off">
             <input type="password" id="pass" placeholder="ПАРОЛЬ">
             <button id="login-btn">ВОЙТИ</button>
         </div>
     </div>
 
-    <div id="game-screen" class="hidden">
-        <div id="game-msg">ВЫ ВОШЛИ!<br>ИГРА СКОРО ЗАПУСТИТСЯ</div>
-    </div>
+    <div id="game-container"></div>
 
 <script>
-// 1. ПОДКЛЮЧЕНИЕ К ТВОЕЙ БАЗЕ
-const firebaseConfig = { databaseURL: "https://pnake-7080-default-rtdb.firebaseio.com" };
+/**
+ * 1. АКТУАЛЬНЫЙ FIREBASE (Данные из твоего IMG_6701.jpg)
+ */
+const firebaseConfig = {
+    apiKey: "AIzaSyCr28iNiurXgoZwbxOfast8R26ZiwVAR5Y",
+    authDomain: "pnake3.firebaseapp.com",
+    databaseURL: "https://pnake3-default-rtdb.firebaseio.com",
+    projectId: "pnake3",
+    storageBucket: "pnake3.firebasestorage.app",
+    messagingSenderId: "796701048320",
+    appId: "1:796701048320:web:d88d06ada6e6e15a52e2e5"
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 2. ЛОГИКА КНОПКИ
+const App = {
+    user: null,
+    save: function() {
+        if (this.user) db.ref('users/' + this.user.nick).update(this.user);
+    }
+};
+
+/**
+ * 2. ДВИЖОК ИГРЫ
+ */
+class BootScene extends Phaser.Scene {
+    constructor() { super('BootScene'); }
+    create() { console.log("Engine Ready"); }
+}
+
+class MenuScene extends Phaser.Scene {
+    constructor() { super('MenuScene'); }
+    create() {
+        this.add.text(180, 200, "PNAKE ONLINE", { fontSize: '32px', fill: '#ffb6c1' }).setOrigin(0.5);
+        this.add.text(180, 300, `ПРИВЕТ, ${App.user.nick}`, { fontSize: '20px' }).setOrigin(0.5);
+        let btn = this.add.rectangle(180, 450, 200, 60, 0xffb6c1, 0.3).setInteractive();
+        this.add.text(180, 450, "ИГРАТЬ").setOrigin(0.5);
+        btn.on('pointerdown', () => this.scene.start('GameScene'));
+    }
+}
+
+class GameScene extends Phaser.Scene {
+    constructor() { super('GameScene'); }
+    create() {
+        this.add.text(180, 320, "ЗМЕЙКА ЗАПУЩЕНА", { color: '#ffb6c1' }).setOrigin(0.5);
+        this.input.on('pointerdown', () => this.scene.start('MenuScene'));
+    }
+}
+
+const config = {
+    type: Phaser.AUTO,
+    width: 360,
+    height: 640,
+    parent: 'game-container',
+    backgroundColor: '#000000',
+    scene: [BootScene, MenuScene, GameScene]
+};
+const game = new Phaser.Game(config);
+
+/**
+ * 3. ЛОГИКА ВХОДА (СВЯЗКА С ТВОИМИ ID)
+ */
 document.getElementById('login-btn').onclick = async function() {
-    const btn = this;
     const nick = document.getElementById('nick').value.trim();
     const pass = document.getElementById('pass').value.trim();
 
-    if (!nick || !pass) {
-        alert("Введите ник и пароль!");
-        return;
-    }
-
-    btn.innerText = "ПРОВЕРКА...";
-    btn.disabled = true;
+    if (!nick || !pass) return alert("Заполни все поля!");
 
     try {
         const userRef = db.ref('users/' + nick);
-        const snapshot = await userRef.get();
+        const snap = await userRef.get();
 
-        if (!snapshot.exists()) {
-            // Если пользователя нет, создаем его
-            if (confirm("Создать новый аккаунт " + nick + "?")) {
-                await userRef.set({
-                    nick: nick,
-                    password: pass,
-                    coins: 100,
-                    regDate: Date.now()
-                });
-                alert("Аккаунт создан! Нажмите ВОЙТИ еще раз.");
+        if (!snap.exists()) {
+            if (confirm(`Зарегистрировать ник ${nick}?`)) {
+                const newUser = { nick, password: pass, coins: 100, level: 1, xp: 0 };
+                await userRef.set(newUser);
+                alert("Аккаунт создан! Нажми войти еще раз.");
             }
         } else {
-            // Если пользователь есть, проверяем пароль
-            const userData = snapshot.val();
-            if (userData.password === pass) {
-                // УСПЕШНЫЙ ВХОД
+            const data = snap.val();
+            if (data.password === pass) {
+                App.user = data;
                 document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('game-screen').classList.remove('hidden');
-                console.log("Вход выполнен успешно для:", nick);
+                window.scrollTo(0,0);
+                game.scene.start('MenuScene');
             } else {
                 alert("Неверный пароль!");
             }
         }
-    } catch (error) {
-        console.error(error);
-        alert("Ошибка базы: " + error.message);
-    } finally {
-        btn.innerText = "ВОЙТИ";
-        btn.disabled = false;
+    } catch (e) {
+        alert("Ошибка связи с базой!");
+        console.error(e);
     }
 };
 
-// Фикс для мобильных устройств
-window.addEventListener('focusout', () => window.scrollTo(0,0));
+window.addEventListener('focusout', () => window.scrollTo(0, 0));
 </script>
 </body>
 </html>
