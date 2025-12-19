@@ -3151,6 +3151,100 @@ App.save = function() {
         console.log("Данные игрока синхронизированы с облаком.");
     }
 };
+    /**
+ * ============================================================================
+ * МОДУЛЬ 22: ОЖИВЛЕНИЕ HTML-ФОРМЫ И СИСТЕМА ПАРОЛЕЙ
+ * ============================================================================
+ */
+
+// 1. Функция для поиска элементов на твоей странице
+function getLoginData() {
+    // Пытаемся найти инпуты по тегам или плейсхолдерам, если у них нет ID
+    const inputs = document.querySelectorAll('input');
+    let nick = "";
+    let pass = "";
+
+    inputs.forEach(input => {
+        if (input.placeholder.toLowerCase().includes('никнейм')) nick = input.value;
+        if (input.placeholder.toLowerCase().includes('пароль')) pass = input.value;
+    });
+
+    return { nick: nick.trim(), pass: pass.trim() };
+}
+
+// 2. Основная логика входа через твою розовую кнопку
+async function handleLogin() {
+    const data = getLoginData();
+    
+    if (!data.nick || data.nick.length < 3) {
+        alert("Введите корректный никнейм!");
+        return;
+    }
+    if (!data.pass || data.pass.length < 4) {
+        alert("Пароль должен быть не короче 4 символов!");
+        return;
+    }
+
+    const userRef = App.db.ref(`users/${data.nick}`);
+    const snap = await userRef.get();
+
+    if (!snap.exists()) {
+        // РЕГИСТРАЦИЯ
+        if (confirm(`Зарегистрировать новый аккаунт [${data.nick}]?`)) {
+            const newUser = {
+                nick: data.nick,
+                password: data.pass, // Сохраняем пароль
+                coins: 100,
+                total: 0,
+                mana: 100,
+                regDate: Date.now()
+            };
+            await userRef.set(newUser);
+            alert("Аккаунт создан! Нажмите ВОЙТИ еще раз.");
+        }
+    } else {
+        // ВХОД
+        const userData = snap.val();
+        if (userData.password === data.pass) {
+            App.user = userData;
+            alert(`Успешный вход! Удачи, ${data.nick}`);
+            // Запускаем игру (переход в MenuScene)
+            if (window.game) window.game.scene.start('MenuScene', 'BootScene');
+        } else {
+            alert("Неверный пароль! Попробуйте снова.");
+        }
+    }
+}
+
+// 3. ПРИВЯЗКА К ТВОЕЙ КНОПКЕ
+function bindInterface() {
+    // Ищем твою розовую кнопку "ВОЙТИ"
+    const buttons = document.querySelectorAll('button, div, a');
+    buttons.forEach(btn => {
+        if (btn.innerText && btn.innerText.toUpperCase() === 'ВОЙТИ') {
+            btn.onclick = (e) => {
+                e.preventDefault();
+                handleLogin();
+            };
+            // Добавим эффект свечения при наведении, раз уж мы тут
+            btn.style.cursor = "pointer";
+            btn.onmouseover = () => btn.style.filter = "brightness(1.2)";
+            btn.onmouseout = () => btn.style.filter = "brightness(1)";
+        }
+    });
+}
+
+// Запускаем привязку через секунду после загрузки, чтобы HTML успел прогрузиться
+setTimeout(bindInterface, 1000);
+
+/**
+ * ФИКС: Если игра уже запущена, но висит черный экран
+ */
+BootScene.prototype.create = function() {
+    // Мы не рисуем кнопки внутри Phaser, так как они у тебя уже есть в HTML.
+    // Просто ждем события входа.
+    this.add.text(180, 320, "ОЖИДАНИЕ ВХОДА...", { fontSize: '12px', alpha: 0.5 }).setOrigin(0.5);
+};
 </script>
 </body>
 </html>
