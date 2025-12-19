@@ -3174,7 +3174,81 @@ App.save = function() {
     }
 };
  
+/**
+ * ЧАСТЬ 24: ФИНАЛЬНЫЙ ИСПРАВЛЕННЫЙ ВХОД (БЕЗ КОНФЛИКТОВ)
+ */
+function connectAuth() {
+    // Ищем кнопку по тексту "ВОЙТИ", так как в HTML у тебя нет на ней ID
+    const buttons = document.querySelectorAll('button, div, span');
+    let loginBtn = null;
+    buttons.forEach(b => {
+        if (b.innerText && b.innerText.trim().toUpperCase() === 'ВОЙТИ') loginBtn = b;
+    });
 
+    if (!loginBtn) {
+        // Если кнопка еще не появилась на экране, пробуем найти через полсекунды
+        setTimeout(connectAuth, 500);
+        return;
+    }
+
+    loginBtn.style.cursor = "pointer";
+    loginBtn.onclick = async function(e) {
+        e.preventDefault();
+
+        // Берем данные из полей по твоим ID: nick и pass (как на скриншоте IMG_6692)
+        const nickInput = document.getElementById('nick');
+        const passInput = document.getElementById('pass');
+
+        if (!nickInput || !passInput) {
+            alert("Ошибка: Поля 'nick' или 'pass' не найдены в HTML!");
+            return;
+        }
+
+        const username = nickInput.value.trim();
+        const password = passInput.value.trim();
+
+        if (username.length < 2) {
+            alert("Никнейм слишком короткий!");
+            return;
+        }
+
+        try {
+            const userRef = App.db.ref(`users/${username}`);
+            const snap = await userRef.get();
+
+            if (!snap.exists()) {
+                // Если игрока нет - регистрируем его
+                if (confirm(`Создать новый аккаунт ${username}?`)) {
+                    await userRef.set({
+                        nick: username,
+                        password: password,
+                        coins: 100,
+                        regDate: Date.now()
+                    });
+                    alert("Регистрация успешна! Нажми ВОЙТИ еще раз.");
+                }
+            } else {
+                // Проверка пароля
+                const data = snap.val();
+                if (data.password === password) {
+                    App.user = data;
+                    // Скрываем экран входа (ID: auth-screen)
+                    document.getElementById('auth-screen').style.display = 'none';
+                    // Запускаем игру
+                    if (window.game) game.scene.start('MenuScene');
+                } else {
+                    alert("Неверный пароль!");
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Ошибка связи с базой данных Firebase!");
+        }
+    };
+}
+
+// Запускаем поиск кнопки сразу
+connectAuth();
 </script>
 </body>
 </html>
