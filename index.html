@@ -3070,115 +3070,28 @@ game.scene.add('WorkshopScene', WorkshopScene);
  * Твой мир PNAKE официально завершен.
  */ 
     /**
- * ============================================================================
- * МОДУЛЬ 21: РЕГИСТРАЦИЯ И ИСПРАВЛЕНИЕ АВТОРИЗАЦИИ
- * ============================================================================
+ * =============================================================
+ * СИСТЕМА АВТОРИЗАЦИИ 2.0 (БЕЗ КОНФЛИКТОВ)
+ * Подходит для HTML-полей id="nick" и id="pass"
+ * =============================================================
  */
 
-class AuthSystem {
-    // Функция регистрации нового игрока
-    static async register(nick) {
-        if (!nick || nick.length < 3) return alert("Ник слишком короткий!");
-        
-        const userRef = App.db.ref(`users/${nick}`);
-        const snap = await userRef.get();
-
-        if (snap.exists()) {
-            return alert("Этот ник уже занят! Выберите другой или войдите.");
-        }
-
-        // Создаем чистый профиль для нового игрока
-        const newUser = {
-            nick: nick,
-            coins: 50, // Стартовый бонус
-            total: 0,
-            warns: 0,
-            reputation: 0,
-            mana: 100,
-            inventory: [],
-            petLevel: 1,
-            body: 'default',
-            bodyShape: 'rect',
-            isAdmin: false // По умолчанию все игроки
-        };
-
-        await userRef.set(newUser);
-        alert("Регистрация успешна! Теперь нажмите 'Войти'.");
-    }
-
-    // Функция входа
-    static async login(nick, scene) {
-        const snap = await App.db.ref(`users/${nick}`).get();
-        
-        if (!snap.exists()) {
-            let confirmReg = confirm("Игрок не найден. Хотите зарегистрировать ник " + nick + "?");
-            if (confirmReg) {
-                await this.register(nick);
-            }
-            return;
-        }
-
-        // Если игрок найден, загружаем его данные
-        App.user = snap.val();
-        App.user.nick = nick; // На всякий случай фиксируем ник
-        
-        // Проверка на бан
-        const banSnap = await App.db.ref(`banned/${nick}`).get();
-        if (banSnap.exists()) {
-            return alert("Ваш аккаунт заблокирован: " + banSnap.val().reason);
-        }
-
-        alert("Добро пожаловать, " + nick + "!");
-        scene.scene.start('MenuScene'); // Переход в игру
-    }
-}
-
-/**
- * ПЕРЕПИСЫВАЕМ СЦЕНУ ВХОДА (BOOT SCENE)
- */
+// 1. Убираем старые кнопки из игры
 BootScene.prototype.create = function() {
-    const cx = 180;
-    this.add.text(cx, 150, "PNAKE ONLINE", { fontSize: '32px', fill: '#00ffff', fontStyle: 'bold' }).setOrigin(0.5);
-    
-    // Поле ввода ника (через prompt или HTML input)
-    let loginBtn = this.add.rectangle(cx, 300, 200, 50, 0x00ff00, 0.2).setInteractive().setStrokeStyle(2, 0x00ff00);
-    this.add.text(cx, 300, "ВОЙТИ", { fontSize: '20px' }).setOrigin(0.5);
-
-    let regBtn = this.add.rectangle(cx, 370, 200, 50, 0x00ffff, 0.2).setInteractive().setStrokeStyle(2, 0x00ffff);
-    this.add.text(cx, 370, "РЕГИСТРАЦИЯ", { fontSize: '20px' }).setOrigin(0.5);
-
-    // Логика кнопки войти
-    loginBtn.on('pointerdown', () => {
-        let nick = prompt("Введите ваш ник для входа:");
-        if (nick) AuthSystem.login(nick, this);
-    });
-
-    // Логика кнопки регистрации
-    regBtn.on('pointerdown', () => {
-        let nick = prompt("Придумайте ник (минимум 3 символа):");
-        if (nick) AuthSystem.register(nick);
-    });
-
-    // Визуальный эффект при наведении
-    [loginBtn, regBtn].forEach(btn => {
-        btn.on('pointerover', () => btn.setAlpha(0.8));
-        btn.on('pointerout', () => btn.setAlpha(1));
-    });
+    this.add.text(180, 600, "ОЖИДАНИЕ ВХОДА...", { fontSize: '10px', fill: '#444' }).setOrigin(0.5);
 };
 
-// Фикс сохранения: теперь App.save() отправляет данные строго по нику в Firebase
+// 2. Исправляем сохранение (базовая логика 21 части)
 App.save = function() {
     if (App.user && App.user.nick) {
         App.db.ref(`users/${App.user.nick}`).update(App.user);
-        console.log("Данные игрока синхронизированы с облаком.");
+        console.log("Данные синхронизированы!");
     }
 };
- 
-/**
- * ЧАСТЬ 24: ФИНАЛЬНЫЙ ИСПРАВЛЕННЫЙ ВХОД (БЕЗ КОНФЛИКТОВ)
- */
-function connectAuth() {
-    // Ищем кнопку по тексту "ВОЙТИ", так как в HTML у тебя нет на ней ID
+
+// 3. Главная функция связи (Тот самый "Мост")
+async function startSnakeGame() {
+    // Ищем твою розовую кнопку по тексту
     const buttons = document.querySelectorAll('button, div, span');
     let loginBtn = null;
     buttons.forEach(b => {
@@ -3186,8 +3099,7 @@ function connectAuth() {
     });
 
     if (!loginBtn) {
-        // Если кнопка еще не появилась на экране, пробуем найти через полсекунды
-        setTimeout(connectAuth, 500);
+        setTimeout(startSnakeGame, 500); // Ищем, пока не появится
         return;
     }
 
@@ -3195,60 +3107,58 @@ function connectAuth() {
     loginBtn.onclick = async function(e) {
         e.preventDefault();
 
-        // Берем данные из полей по твоим ID: nick и pass (как на скриншоте IMG_6692)
-        const nickInput = document.getElementById('nick');
-        const passInput = document.getElementById('pass');
+        // Берем данные из твоих полей (как на фото IMG_6692)
+        const nickField = document.getElementById('nick');
+        const passField = document.getElementById('pass');
 
-        if (!nickInput || !passInput) {
-            alert("Ошибка: Поля 'nick' или 'pass' не найдены в HTML!");
+        if (!nickField || !passField) {
+            console.error("Поля nick или pass не найдены!");
             return;
         }
 
-        const username = nickInput.value.trim();
-        const password = passInput.value.trim();
+        const username = nickField.value.trim();
+        const password = passField.value.trim();
 
-        if (username.length < 2) {
-            alert("Никнейм слишком короткий!");
-            return;
-        }
+        if (username.length < 2) return alert("Введите никнейм!");
 
         try {
             const userRef = App.db.ref(`users/${username}`);
             const snap = await userRef.get();
 
             if (!snap.exists()) {
-                // Если игрока нет - регистрируем его
-                if (confirm(`Создать новый аккаунт ${username}?`)) {
-                    await userRef.set({
+                // РЕГИСТРАЦИЯ
+                if (confirm(`Зарегистрировать ник ${username}?`)) {
+                    const newUser = {
                         nick: username,
                         password: password,
                         coins: 100,
+                        mana: 100,
                         regDate: Date.now()
-                    });
-                    alert("Регистрация успешна! Нажми ВОЙТИ еще раз.");
+                    };
+                    await userRef.set(newUser);
+                    alert("Успех! Теперь нажми ВОЙТИ еще раз.");
                 }
             } else {
-                // Проверка пароля
-                const data = snap.val();
-                if (data.password === password) {
-                    App.user = data;
-                    // Скрываем экран входа (ID: auth-screen)
+                // ВХОД
+                const userData = snap.val();
+                if (userData.password === password) {
+                    App.user = userData;
+                    // Прячем твое розовое окно (ID: auth-screen)
                     document.getElementById('auth-screen').style.display = 'none';
-                    // Запускаем игру
+                    // Запускаем движок змейки
                     if (window.game) game.scene.start('MenuScene');
                 } else {
-                    alert("Неверный пароль!");
+                    alert("Пароль неверный!");
                 }
             }
         } catch (err) {
-            console.error(err);
-            alert("Ошибка связи с базой данных Firebase!");
+            alert("Ошибка базы данных! Проверь интернет.");
         }
     };
 }
 
-// Запускаем поиск кнопки сразу
-connectAuth();
+// Запускаем процесс поиска кнопки
+startSnakeGame();
 </script>
 </body>
 </html>
