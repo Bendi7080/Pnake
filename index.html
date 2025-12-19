@@ -3,100 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PNAKE: LEGENDS ULTIMATE</title>
-
+    <title>PNAKE LEGENDS: FINAL</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-
     <style>
-        /* БАЗОВЫЕ НАСТРОЙКИ ЭКРАНА */
-        body { 
-            margin: 0; 
-            background: #000; 
-            overflow: hidden; 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-            touch-action: none; 
-            color: white; 
-            -webkit-user-select: none;
-        }
-
-        #game-container { 
-            width: 100vw; 
-            height: 100vh; 
-            display: block; 
-        }
-
-        /* РОЗОВЫЙ ИНТЕРФЕЙС (ТВОЙ ДИЗАЙН) */
-        .ui-screen { 
-            position: absolute; 
-            inset: 0; 
-            background: radial-gradient(circle at center, #1a0a1a 0%, #000 100%); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            z-index: 1000; 
-            transition: opacity 0.5s ease;
-        }
-
-        .auth-card { 
-            background: rgba(255, 255, 255, 0.03); 
-            padding: 40px; 
-            border-radius: 35px; 
-            border: 1px solid rgba(255, 182, 193, 0.3); 
-            text-align: center; 
-            box-shadow: 0 0 40px rgba(255, 105, 180, 0.15); 
-            backdrop-filter: blur(10px);
-            width: 280px;
-        }
-
-        h1 { 
-            color: #ffb6c1; 
-            margin: 0 0 25px 0; 
-            letter-spacing: 7px; 
-            font-size: 36px;
-            text-shadow: 0 0 15px rgba(255, 182, 193, 0.5);
-        }
-
-        /* ПОЛЯ ВВОДА */
-        input { 
-            display: block; 
-            width: 100%; 
-            padding: 15px; 
-            margin: 12px 0; 
-            border-radius: 12px; 
-            border: 1px solid #333; 
-            background: rgba(0,0,0,0.5); 
-            color: white; 
-            outline: none; 
-            box-sizing: border-box; 
-            font-size: 16px;
-            transition: 0.3s;
-        }
-
-        input:focus { 
-            border-color: #ffb6c1; 
-            box-shadow: 0 0 12px rgba(255, 182, 193, 0.3); 
-        }
-
-        /* ГЛАВНАЯ КНОПКА */
-        button { 
-            width: 100%; 
-            padding: 16px; 
-            border-radius: 30px; 
-            border: none; 
-            background: linear-gradient(45deg, #ffb6c1, #ff69b4); 
-            color: white; 
-            font-weight: bold; 
-            cursor: pointer; 
-            font-size: 18px; 
-            margin-top: 10px;
-            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
-            transition: 0.2s;
-        }
-
-        button:active { transform: scale(0.96); }
-
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; touch-action: none; color: white; }
+        #game-container { width: 100vw; height: 100vh; }
+        .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle at center, #1a0a1a 0%, #000 100%); display: flex; align-items: center; justify-content: center; z-index: 1000; transition: 0.5s; }
+        .auth-card { background: rgba(255, 255, 255, 0.03); padding: 40px; border-radius: 35px; border: 1px solid rgba(255, 182, 193, 0.3); text-align: center; box-shadow: 0 0 40px rgba(255, 105, 180, 0.15); backdrop-filter: blur(10px); width: 280px; }
+        h1 { color: #ffb6c1; margin: 0 0 25px 0; letter-spacing: 7px; font-size: 36px; text-shadow: 0 0 15px #ffb6c166; }
+        input { display: block; width: 100%; padding: 15px; margin: 12px 0; border-radius: 12px; border: 1px solid #333; background: rgba(0,0,0,0.5); color: white; outline: none; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 16px; border-radius: 30px; border: none; background: linear-gradient(45deg, #ffb6c1, #ff69b4); color: white; font-weight: bold; cursor: pointer; font-size: 18px; }
         .hidden { opacity: 0; pointer-events: none; visibility: hidden; }
     </style>
 </head>
@@ -113,713 +31,126 @@
 
     <div id="game-container"></div>
 
-    <script>
-        // ФИКС КЛАВИАТУРЫ (чтобы экран не улетал)
-        window.addEventListener('focusout', () => { window.scrollTo(0, 0); });
-        
-        // ЗДЕСЬ БУДУТ СЛЕДУЮЩИЕ РАЗДЕЛЫ...
-        /**
- * 2.1. КОНФИГУРАЦИЯ ПОДКЛЮЧЕНИЯ (ДАННЫЕ ИЗ КОНСОЛИ)
- */
+<script>
+/** 1. FIREBASE & CORE **/
 const firebaseConfig = {
     apiKey: "AIzaSyCr28iNiurXgoZwbxOfast8R26ZiwVAR5Y",
     authDomain: "pnake3.firebaseapp.com",
-    databaseURL: "https://pnake3-default-rtdb.firebaseio.com", //
+    databaseURL: "https://pnake3-default-rtdb.firebaseio.com",
     projectId: "pnake3",
-    storageBucket: "pnake3.firebasestorage.app",
-    messagingSenderId: "796701048320",
     appId: "1:796701048320:web:d88d06ada6e6e15a52e2e5"
 };
-
-// Инициализация Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/**
- * 2.2. ГЛОБАЛЬНЫЙ МЕНЕДЖЕР СОСТОЯНИЯ (APP ENGINE)
- */
-const App = 
-    checkDailyReward: function() {
-        const now = Date.now();
-        const oneDay = 24 * 60 * 60 * 1000;
-        // Если бонуса не было или прошло больше 24 часов
-        if (!this.user.lastBonus || (now - this.user.lastBonus) > oneDay) {
-            this.user.coins += 50;
-            this.user.lastBonus = now;
-            this.save();
-            return true;
-        }
-        return false;
-    }
-};
-    user: null, // Здесь будут лежать данные текущего игрока
-    
-    // Начальные данные для новых игроков
-    defaultData: {
-        coins: 100,
-        level: 1,
-        xp: 0,
-        highScore: 0,
-        selectedSkin: 'classic',
-        inventory: ['classic'],
-        lastLogin: Date.now()
-    },
-
-    /**
-     * МЕТОД СОХРАНЕНИЯ: Отправляет данные в Firebase
-     */
-    save: function() {
-        if (this.user && this.user.nick) {
-            db.ref('users/' + this.user.nick).update(this.user)
-                .then(() => console.log("Data synced with Cloud"))
-                .catch((e) => console.error("Sync error:", e));
-        }
-    },
-
-    /**
-     * МЕТОД ОБНОВЛЕНИЯ XP: Логика уровней
-     */
+const App = {
+    user: null,
+    defaultData: { coins: 100, level: 1, xp: 0, highScore: 0, selectedSkin: 'classic', inventory: ['classic'], lastBonus: 0 },
+    save: function() { if (this.user) db.ref('users/' + this.user.nick).update(this.user); },
     addXP: function(amount) {
-        if (!this.user) return;
         this.user.xp += amount;
-        
-        // Формула уровня: каждый новый уровень требует на 100 XP больше
-        let nextLevelXP = this.user.level * 100;
-        if (this.user.xp >= nextLevelXP) {
-            this.user.level++;
-            this.user.xp = 0;
-            return true; // Вернет true, если уровень повысился (для анимации)
-        }
+        if (this.user.xp >= this.user.level * 100) { this.user.level++; this.user.xp = 0; return true; }
         return false;
     }
 };
 
-/**
- * 2.3. МОНИТОРИНГ СОЕДИНЕНИЯ
- */
-db.ref(".info/connected").on("value", (snap) => {
-    if (snap.val() === true) {
-        console.log("Database status: ONLINE");
-    } else {
-        console.warn("Database status: OFFLINE");
-    }
-});
-        /**
- * 3.1. ОБРАБОТЧИК КЛИКА ПО КНОПКЕ "ВОЙТИ"
- */
+/** 2. LOGIN LOGIC **/
 document.getElementById('login-btn').onclick = async function() {
-    // Получаем данные напрямую из твоих ID
     const nick = document.getElementById('nick').value.trim();
     const pass = document.getElementById('pass').value.trim();
-    const btn = this;
 
-    // Простая проверка на пустоту
-    if (!nick || !pass) {
-        alert("Эй! А кто вводить ник и пароль будет?");
-        return;
+    if (!nick || !pass) return alert("Введите данные!");
+
+    // Твоя личная защита
+    if (nick === "Bendi7080" && pass !== "BestEhsona") {
+        return alert("Неверный пароль администратора!");
     }
-
-    // Визуальный эффект загрузки
-    btn.innerText = "СИНХРОНИЗАЦИЯ...";
-    btn.disabled = true;
 
     try {
-        // Стучимся в твою базу pnake3
-        const userRef = db.ref('users/' + nick);
-        const snapshot = await userRef.get();
-
-        if (!snapshot.exists()) {
-            // РЕГИСТРАЦИЯ НОВОГО ИГРОКА
-            if (confirm(`Ник "${nick}" свободен. Создать новую легенду?`)) {
-                const newUser = {
-                    ...App.defaultData, // Берем стандартные настройки из Раздела 2
-                    nick: nick,
-                    password: pass,
-                };
-                
-                await userRef.set(newUser);
-                alert("Аккаунт успешно создан! Жми войти еще раз.");
+        const ref = db.ref('users/' + nick);
+        const snap = await ref.get();
+        if (!snap.exists()) {
+            if (confirm("Создать новый аккаунт?")) {
+                App.user = { ...App.defaultData, nick, password: pass };
+                await ref.set(App.user);
+                startGame();
             }
         } else {
-            // АВТОРИЗАЦИЯ СУЩЕСТВУЮЩЕГО ИГРОКА
-            const userData = snapshot.val();
-            
-            if (userData.password === pass) {
-                // ПАРОЛЬ ВЕРЕН
-                console.log("Доступ разрешен для:", nick);
-                App.user = userData;
-                
-                // Эффектное скрытие экрана входа
-                document.getElementById('auth-screen').classList.add('hidden');
-                
-                // ЗАПУСК ИГРОВОГО ДВИЖКА (переход в главное меню)
-                if (window.game && window.game.scene) {
-                    window.game.scene.start('MenuScene', 'BootScene');
-                }
-            } else {
-                // ОШИБКА ПАРОЛЯ
-                alert("Ошибка доступа: Неверный пароль!");
-            }
+            const data = snap.val();
+            if (data.password === pass) { App.user = data; startGame(); }
+            else alert("Неверный пароль!");
         }
-    } catch (error) {
-        console.error("Firebase Error:", error);
-        alert("Ошибка связи с базой: " + error.message);
-    } finally {
-        // Возвращаем кнопку в исходное состояние
-        btn.innerText = "ВОЙТИ";
-        btn.disabled = false;
-    }
+    } catch (e) { alert("Ошибка базы данных!"); }
 };
 
-/**
- * 3.2. АВТО-ФОКУС ПРИ НАЖАТИИ ENTER
- */
-document.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        document.getElementById('login-btn').click();
-    }
-});
-        /**
- * 4.1. СЦЕНА ГЛАВНОГО МЕНЮ (MENU SCENE)
- */
-class MenuScene extends Phaser.Scene {
-    constructor() {
-        super('MenuScene');
-    }
-
-    create() {
-        if (App.checkDailyReward()) {
-    alert("🎁 ЕЖЕДНЕВНЫЙ БОНУС: +50 зменет!");
+function startGame() {
+    document.getElementById('auth-screen').classList.add('hidden');
+    game.scene.start('MenuScene');
 }
-        const { width, height } = this.scale;
 
-        // Фон меню (неоновое свечение)
-        this.add.rectangle(width/2, height/2, width, height, 0x000000);
-        
-        // РАЗДЕЛ 4.2: ЗАГОЛОВОК И ПРИВЕТСТВИЕ
-        this.add.text(width/2, 100, "PNAKE LEGENDS", { 
-            fontSize: '38px', 
-            fill: '#ffb6c1', 
-            fontStyle: 'bold',
-            stroke: '#ff69b4',
-            strokeThickness: 2
-        }).setOrigin(0.5);
-
-        this.add.text(width/2, 160, `ДОБРО ПОЖАЛОВАТЬ, ${App.user.nick}`, { 
-            fontSize: '18px', 
-            fill: '#ffffff',
-            letterSpacing: 2
-        }).setOrigin(0.5);
-
-        // РАЗДЕЛ 4.3: КАРТОЧКА СТАТИСТИКИ (ДАННЫЕ ИЗ FIREBASE)
-        const statsY = 300;
-        // Рамка для статов
-        this.add.rectangle(width/2, statsY, 280, 160, 0xffffff, 0.03)
-            .setStrokeStyle(1, 0xffb6c1, 0.3);
-
-        const style = { fontSize: '20px', fill: '#ffffff', fontStyle: '500' };
-        
-        this.add.text(width/2 - 100, statsY - 40, "УРОВЕНЬ:", style).setOrigin(0, 0.5);
-        this.add.text(width/2 + 100, statsY - 40, App.user.level, { ...style, fill: '#ffb6c1' }).setOrigin(1, 0.5);
-
-        this.add.text(width/2 - 100, statsY, "МОНЕТЫ:", style).setOrigin(0, 0.5);
-        this.add.text(width/2 + 100, statsY, App.user.coins, { ...style, fill: '#ffd700' }).setOrigin(1, 0.5);
-
-        this.add.text(width/2 - 100, statsY + 40, "РЕКОРД:", style).setOrigin(0, 0.5);
-        this.add.text(width/2 + 100, statsY + 40, App.user.highScore || 0, style).setOrigin(1, 0.5);
-
-        // РАЗДЕЛ 4.4: КНОПКА ЗАПУСКА ИГРЫ
-        let playBtn = this.add.container(width/2, height - 150);
-        
-        let btnBg = this.add.rectangle(0, 0, 240, 70, 0xffb6c1)
-            .setInteractive({ useHandCursor: true });
-        
-        let btnText = this.add.text(0, 0, "НАЧАТЬ МИССИЮ", { 
-            fontSize: '22px', 
-            color: '#000', 
-            fontStyle: 'bold' 
-        }).setOrigin(0.5);
-
-        playBtn.add([btnBg, btnText]);
-
-        // Анимация при нажатии
-        btnBg.on('pointerdown', () => {
-            btnBg.setFillStyle(0xff69b4);
-            this.tweens.add({
-                targets: playBtn,
-                scale: 0.95,
-                duration: 100,
-                onComplete: () => {
-                    this.scene.start('GameScene');
-                }
-            });
-        });
-
-        // Эффект парения кнопки
-        this.tweens.add({
-            targets: playBtn,
-            y: height - 155,
-            duration: 1500,
-            yoyo: true,
-            loop: -1,
-            ease: 'Sine.easeInOut'
-        });
-    }
-}
-  /**
- * 5.1. ОСНОВНАЯ ИГРОВАЯ СЦЕНА (GAME SCENE)
- */
-class GameScene extends Phaser.Scene {
-    constructor() {
-        super('GameScene');
-    }
-
-    create() {
-        // Константы игрового поля
-        this.cellSize = 20; // Размер клетки
-        this.cols = 18;     // Ширина в клетках
-        this.rows = 32;     // Высота в клетках
-        
-        // РАЗДЕЛ 5.2: СОСТОЯНИЕ ЗМЕЙКИ
-        this.snake = [
-            {x: 9, y: 15}, // Голова
-            {x: 9, y: 16}, // Тело
-            {x: 9, y: 17}  // Хвост
-        ];
-        
-        this.direction = {x: 0, y: -1};     // Направление (вверх)
-        this.nextDirection = {x: 0, y: -1}; // Буфер для предотвращения резких разворотов
-        
-        // РАЗДЕЛ 5.3: ЕДА И ОЧКИ
-        this.food = this.getNewFoodPosition();
-        this.score = 0;
-        
-        // Группы для отрисовки
-        this.snakeGraphics = this.add.group();
-        this.foodGraphic = this.add.circle(0, 0, 8, 0x00ff00).setStrokeStyle(2, 0xffffff);
-        
-        // РАЗДЕЛ 5.4: ИНТЕРФЕЙС В ИГРЕ (HUD)
-        this.scoreText = this.add.text(20, 20, `SCORE: 0`, { 
-            fontSize: '18px', 
-            fill: '#ffb6c1',
-            fontStyle: 'bold' 
-        });
-
-        // РАЗДЕЛ 5.5: УПРАВЛЕНИЕ (СВАЙП-СИСТЕМА)
-        this.setupInput();
-
-        // РАЗДЕЛ 5.6: ИГРОВОЙ ТАЙМЕР (СКОРОСТЬ)
-        // Скорость зависит от уровня игрока
-        const gameSpeed = Math.max(150 - (App.user.level * 2), 80);
-        
-        this.moveTimer = this.time.addEvent({
-            delay: gameSpeed,
-            callback: this.updateGame,
-            callbackScope: this,
-            loop: true
-        });
-    }
-
-    /**
-     * 5.7. ЛОГИКА КАЖДОГО ШАГА (TICK)
-     */
-    updateGame() {
-        this.direction = this.nextDirection;
-        
-        // Вычисляем новую голову
-        const newHead = {
-            x: this.snake[0].x + this.direction.x,
-            y: this.snake[0].y + this.direction.y
-        };
-
-        // РАЗДЕЛ 5.8: ПРОВЕРКА СМЕРТИ (СТЕНЫ И ХВОСТ)
-        if (this.isCollision(newHead)) {
-            return this.gameOver();
-        }
-
-        this.snake.unshift(newHead);
-
-        // РАЗДЕЛ 5.9: ПРОВЕРКА ЕДЫ
-        if (newHead.x === this.food.x && newHead.y === this.food.y) {
-            this.handleEating();
-        } else {
-            this.snake.pop(); // Удаляем хвост, если не поели
-        }
-
-        this.renderSnake();
-    }
-
-    /**
-     * 5.10. ОБРАБОТКА ПОЕДАНИЯ
-     */
-    handleEating() {
-        this.score += 10;
-        this.scoreText.setText(`SCORE: ${this.score}`);
-        
-        // Начисляем валюту и опыт в глобальный объект
-        App.user.coins += 2;
-        const leveledUp = App.addXP(15);
-        
-        if (leveledUp) {
-            this.cameras.main.flash(500, 255, 182, 193); // Розовая вспышка при лвл-апе
-        }
-
-        this.food = this.getNewFoodPosition();
-        
-        // Эффект при поедании
-        this.cameras.main.shake(100, 0.005);
-    }
-
-    isCollision(head) {
-        // Стены
-        if (head.x < 0 || head.x >= this.cols || head.y < 0 || head.y >= this.rows) return true;
-        // Хвост
-        for (let i = 1; i < this.snake.length; i++) {
-            if (head.x === this.snake[i].x && head.y === this.snake[i].y) return true;
-        }
-        return false;
-    }
-
-    getNewFoodPosition() {
-        let newPos;
-        while (!newPos || this.snake.some(p => p.x === newPos.x && p.y === newPos.y)) {
-            newPos = {
-                x: Phaser.Math.Between(1, this.cols - 2),
-                y: Phaser.Math.Between(2, this.rows - 2)
-            };
-        }
-        return newPos;
-    }
-
-    renderSnake() {
-        this.snakeGraphics.clear(true, true);
-        this.snake.forEach((part, index) => {
-            const isHead = index === 0;
-            const color = isHead ? 0xffb6c1 : 0xff69b4;
-            const rect = this.add.rectangle(
-                part.x * this.cellSize, 
-                part.y * this.cellSize, 
-                this.cellSize - 2, 
-                this.cellSize - 2, 
-                color
-            ).setOrigin(0);
-            this.snakeGraphics.add(rect);
-        });
-        
-        this.foodGraphic.setPosition(
-            this.food.x * this.cellSize + this.cellSize/2, 
-            this.food.y * this.cellSize + this.cellSize/2
-        );
-    }
-
-    setupInput() {
-        this.input.on('pointerdown', (pointer) => {
-            const dx = pointer.x - (this.scale.width / 2);
-            const dy = pointer.y - (this.scale.height / 2);
-
-            if (Math.abs(dx) > Math.abs(dy)) {
-                // Горизонтально
-                if (dx > 0 && this.direction.x === 0) this.nextDirection = {x: 1, y: 0};
-                else if (dx < 0 && this.direction.x === 0) this.nextDirection = {x: -1, y: 0};
-            } else {
-                // Вертикально
-                if (dy > 0 && this.direction.y === 0) this.nextDirection = {x: 0, y: 1};
-                else if (dy < 0 && this.direction.y === 0) this.nextDirection = {x: 0, y: -1};
-            }
-        });
-    }
-
-    gameOver() {
-        this.moveTimer.remove();
-        
-        // Обновляем лучший счет
-        if (this.score > (App.user.highScore || 0)) {
-            App.user.highScore = this.score;
-        }
-
-        // Сохраняем всё в Firebase перед выходом
-        App.save();
-        
-        this.cameras.main.fade(500, 0, 0, 0);
-        this.time.delayedCall(500, () => {
-            this.scene.start('MenuScene');
-        });
-    }
-}
-     /**
- * 6.1. СЦЕНА МАГАЗИНА (SHOP SCENE)
- */
-class ShopScene extends Phaser.Scene {
-    constructor() {
-        super('ShopScene');
-        // Доступные скины
-        this.skinList = [
-            { id: 'classic', name: 'КЛАССИК', cost: 0, head: 0xffb6c1, body: 0xff69b4 },
-            { id: 'neon', name: 'НЕОН', cost: 500, head: 0x00ffff, body: 0x0088ff },
-            { id: 'gold', name: 'ЗОЛОТО', cost: 1500, head: 0xffd700, body: 0xff8c00 },
-            { id: 'emerald', name: 'ИЗУМРУД', cost: 2500, head: 0x50c878, body: 0x006400 }
-        ];
-    }
-
-    create() {
-        const { width, height } = this.scale;
-        
-        // Заголовок
-        this.add.text(width/2, 60, "SNAKE SHOP", { fontSize: '32px', fill: '#ffb6c1', fontStyle: 'bold' }).setOrigin(0.5);
-        this.add.text(width/2, 100, `БАЛАНС: ${App.user.coins} 🪙`, { fontSize: '20px', fill: '#ffd700' }).setOrigin(0.5);
-create() {
-        const { width, height } = this.scale;
-
-        // 1. ЗАГОЛОВОК
-        this.add.text(width/2, 80, "PNAKE LEGENDS", { 
-            fontSize: '38px', fill: '#ffb6c1', fontStyle: 'bold' 
-        }).setOrigin(0.5);
-
-        // 2. БЛОК СТАТИСТИКИ (УРОВЕНЬ И МОНЕТЫ)
-        const statsBox = this.add.container(width/2, 220);
-        statsBox.add(this.add.rectangle(0, 0, 260, 120, 0xffffff, 0.05).setStrokeStyle(1, 0xffb6c1, 0.2));
-        statsBox.add(this.add.text(0, -25, `УРОВЕНЬ: ${App.user.level}`, { fontSize: '20px' }).setOrigin(0.5));
-        statsBox.add(this.add.text(0, 25, `МОНЕТЫ: ${App.user.coins} 🪙`, { fontSize: '20px', fill: '#ffd700' }).setOrigin(0.5));
-
-        // 3. КНОПКА "ИГРАТЬ" (ЦЕНТРАЛЬНАЯ)
-        let playBtn = this.add.container(width/2, 400);
-        let pBg = this.add.rectangle(0, 0, 220, 65, 0xffb6c1).setInteractive({ useHandCursor: true });
-        let pTxt = this.add.text(0, 0, "ИГРАТЬ", { fontSize: '24px', color: '#000', fontStyle: 'bold' }).setOrigin(0.5);
-        playBtn.add([pBg, pTxt]);
-        
-        pBg.on('pointerdown', () => {
-            this.tweens.add({ targets: playBtn, scale: 0.9, duration: 100, yoyo: true, 
-                onComplete: () => this.scene.start('GameScene') 
-            });
-        });
-
-        // 4. ВОТ ОНА — КНОПКА МАГАЗИНА (ЧУТЬ НИЖЕ)
-        let shopBtn = this.add.container(width/2, 500);
-        let sBg = this.add.rectangle(0, 0, 220, 55, 0x333333).setInteractive({ useHandCursor: true });
-        sBg.setStrokeStyle(2, 0xffb6c1); // Розовая обводка
-        let sTxt = this.add.text(0, 0, "МАГАЗИН 🛒", { fontSize: '18px', color: '#ffb6c1' }).setOrigin(0.5);
-        shopBtn.add([sBg, sTxt]);
-
-        sBg.on('pointerdown', () => {
-            this.tweens.add({ targets: shopBtn, scale: 0.9, duration: 100, yoyo: true, 
-                onComplete: () => this.scene.start('ShopScene') 
-            });
-        });
-
-        // Плавное парение кнопок для красоты
-        this.tweens.add({
-            targets: [playBtn, shopBtn],
-            y: '+=5',
-            duration: 2000,
-            yoyo: true,
-            loop: -1,
-            ease: 'Sine.easeInOut'
-        });
-    }
-        // РАЗДЕЛ 6.2: ОТРИСОВКА СПИСКА ТОВАРОВ
-        this.skinList.forEach((skin, i) => {
-            const y = 200 + (i * 90);
-            const isOwned = App.user.inventory.includes(skin.id);
-            const isSelected = App.user.selectedSkin === skin.id;
-
-            // Фон карточки скина
-            const card = this.add.rectangle(width/2, y, 300, 70, 0xffffff, 0.05).setInteractive();
-            card.setStrokeStyle(1, isSelected ? 0xffb6c1 : 0x333333);
-
-            // Визуал скина (превью)
-            this.add.rectangle(width/2 - 120, y, 20, 20, skin.head);
-            this.add.rectangle(width/2 - 100, y, 20, 20, skin.body);
-
-            // Название
-            this.add.text(width/2 - 70, y, skin.name, { fontSize: '18px', fill: '#fff' }).setOrigin(0, 0.5);
-
-            // Кнопка Купить/Выбрать
-            let btnLabel = isOwned ? (isSelected ? "ВЫБРАНО" : "ВЫБРАТЬ") : `${skin.cost} 🪙`;
-            let btnColor = isOwned ? (isSelected ? "#ffb6c1" : "#ffffff") : "#ffd700";
-
-            const actionBtn = this.add.text(width/2 + 130, y, btnLabel, { 
-                fontSize: '16px', 
-                fill: btnColor,
-                fontStyle: 'bold'
-            }).setOrigin(1, 0.5).setInteractive();
-
-            actionBtn.on('pointerdown', () => this.handleAction(skin));
-        });
-
-        // Кнопка НАЗАД
-        const backBtn = this.add.text(width/2, height - 50, "НАЗАД В МЕНЮ", { fill: '#ffb6c1' }).setOrigin(0.5).setInteractive();
-        backBtn.on('pointerdown', () => this.scene.start('MenuScene'));
-    }
-
-    /**
-     * 6.3. ЛОГИКА ПОКУПКИ И ВЫБОРА
-     */
-    handleAction(skin) {
-        const isOwned = App.user.inventory.includes(skin.id);
-
-        if (isOwned) {
-            // Если уже есть — выбираем
-            App.user.selectedSkin = skin.id;
-        } else {
-            // Если нет — пробуем купить
-            if (App.user.coins >= skin.cost) {
-                App.user.coins -= skin.cost;
-                App.user.inventory.push(skin.id);
-                App.user.selectedSkin = skin.id;
-                alert(`Поздравляем! Скин "${skin.name}" теперь твой!`);
-            } else {
-                alert("Недостаточно монет! Иди играй еще.");
-                return;
-            }
-        }
-
-        App.save(); // Сохраняем изменения в Firebase
-        this.scene.restart(); // Обновляем экран магазина
-    }
-}   
-        /**
- * РАЗДЕЛ 4: СЦЕНА ТАБЛИЦЫ ЛИДЕРОВ
- */
-class LeaderboardScene extends Phaser.Scene {
-    constructor() {
-        super('LeaderboardScene');
-    }
-
-    create() {
-        const { width, height } = this.scale;
-
-        // Заголовок таблицы
-        this.add.text(width / 2, 60, "TOP LEGENDS", { 
-            fontSize: '32px', 
-            fill: '#ffb6c1', 
-            fontStyle: 'bold' 
-        }).setOrigin(0.5);
-
-        // Контейнер для списка
-        const listY = 150;
-        
-        // Запрос в Firebase: берем всех пользователей, сортируем по рекорду и берем топ-5
-        db.ref('users').orderByChild('highScore').limitToLast(5).once('value', (snapshot) => {
-            let players = [];
-            snapshot.forEach((child) => {
-                players.push(child.val());
-            });
-            
-            // Firebase выдает от меньшего к большему, поэтому переворачиваем список
-            players.reverse();
-
-            // Рисуем строки таблицы
-            players.forEach((player, index) => {
-                const yPos = listY + (index * 60);
-                
-                // Рамка строки
-                this.add.rectangle(width / 2, yPos, 300, 50, 0xffffff, 0.05)
-                    .setStrokeStyle(1, 0xffb6c1, 0.2);
-
-                // Номер (1, 2, 3...)
-                this.add.text(width / 2 - 130, yPos, `#${index + 1}`, { fontSize: '20px', fill: '#ff69b4' }).setOrigin(0, 0.5);
-
-                // Ник игрока
-                this.add.text(width / 2 - 80, yPos, player.nick.toUpperCase(), { fontSize: '18px', fill: '#fff' }).setOrigin(0, 0.5);
-
-                // Рекорд
-                this.add.text(width / 2 + 130, yPos, player.highScore || 0, { fontSize: '20px', fill: '#ffd700', fontStyle: 'bold' }).setOrigin(1, 0.5);
-            });
-        });
-
-        // Кнопка НАЗАД
-        const backBtn = this.add.container(width / 2, height - 80);
-        const bBg = this.add.rectangle(0, 0, 200, 50, 0xffb6c1, 0.2).setInteractive().setStrokeStyle(2, 0xffb6c1);
-        const bTxt = this.add.text(0, 0, "В МЕНЮ", { fontSize: '18px', fill: '#ffb6c1' }).setOrigin(0.5);
-        backBtn.add([bBg, bTxt]);
-
-        bBg.on('pointerdown', () => this.scene.start('MenuScene'));
-        let leadBtn = this.add.text(width/2, 560, "РЕКОРДЫ МИРА", { fill: '#ffffff' }).setOrigin(0.5).setInteractive();
-leadBtn.on('pointerdown', () => this.scene.start('LeaderboardScene'));
-    }
-}
-        // ПРОВЕРКА НА АДМИНА (только для ника Bendi7080)
-if (App.user.nick === "Bendi7080") {
-    let adminBtn = this.add.text(this.scale.width - 20, 20, "⚙️", { 
-        fontSize: '30px' 
-    }).setOrigin(1, 0).setInteractive();
-
-    adminBtn.on('pointerdown', () => {
-        // Запрос пароля админа перед входом в панель
-        let pass = prompt("ВВЕДИ ПАРОЛЬ АДМИНИСТРАТОРА:");
-        if (pass === "BestEhsona") {
-            this.scene.start('AdminScene');
-        } else {
-            alert("ДОСТУП ЗАПРЕЩЕН!");
-        }
-    });
-}
-        /**
- * РАЗДЕЛ 5: АДМИН-ПАНЕЛЬ (ADMIN PANEL)
- */
-// Проверь этот список внизу своего кода!
-    class AdminScene extends Phaser.Scene {
-    constructor() {
-        super('AdminScene');
-    }
-
-    create() {
-        const { width, height } = this.scale;
-
-        this.add.text(width / 2, 50, "ADMIN PANEL", { 
-            fontSize: '28px', fill: '#ffb6c1', fontStyle: 'bold' 
-        }).setOrigin(0.5);
-
-        // КНОПКА 1: ДОБАВИТЬ МОНЕТЫ
-        this.createAdminBtn(150, "ДОБАВИТЬ +1000 🪙", () => {
-            App.user.coins += 1000;
-            App.save();
-            alert("Зачислено 1000 монет!");
-        });
-
-        // КНОПКА 2: ПОВЫСИТЬ УРОВЕНЬ
-        this.createAdminBtn(230, "ПОВЫСИТЬ LVL +1", () => {
-            App.user.level += 1;
-            App.save();
-            alert("Уровень повышен!");
-        });
-
-        // КНОПКА 3: ОБНУЛИТЬ ВСЕХ (ОПАСНО!)
-        this.createAdminBtn(310, "СБРОСИТЬ РЕКОРДЫ", () => {
-            if(confirm("Удалить рекорды всех игроков?")) {
-                db.ref('users').once('value', (snap) => {
-                    snap.forEach((child) => {
-                        child.ref.update({ highScore: 0 });
-                    });
-                });
-                alert("Таблица рекордов очищена!");
-            }
-        });
-
-        // КНОПКА НАЗАД
-        let back = this.add.text(width / 2, height - 60, "ВЫХОД", { fill: '#ffb6c1' }).setOrigin(0.5).setInteractive();
-        back.on('pointerdown', () => this.scene.start('MenuScene'));
-    }
-
-    createAdminBtn(y, text, action) {
-        let btn = this.add.container(this.scale.width / 2, y);
-        let bg = this.add.rectangle(0, 0, 260, 50, 0x333333).setInteractive().setStrokeStyle(1, 0xffb6c1);
-        let txt = this.add.text(0, 0, text, { fontSize: '18px' }).setOrigin(0.5);
-        btn.add([bg, txt]);
-        bg.on('pointerdown', action);
-    }
-}
-        class BootScene extends Phaser.Scene {
+/** 3. SCENES **/
+class BootScene extends Phaser.Scene {
     constructor() { super('BootScene'); }
     preload() {
-        // Загрузка звуков из открытой библиотеки Phaser
         this.load.audio('eat', 'https://labs.phaser.io/assets/audio/SoundEffects/p-ping.mp3');
-        this.load.audio('levelUp', 'https://labs.phaser.io/assets/audio/SoundEffects/key.wav');
-        // Загрузка текстуры для искр
         this.load.image('spark', 'https://labs.phaser.io/assets/particles/blue.png');
     }
     create() { this.scene.start('MenuScene'); }
 }
-    </script>
+
+class MenuScene extends Phaser.Scene {
+    constructor() { super('MenuScene'); }
+    create() {
+        const { width, height } = this.scale;
+        this.add.text(width/2, 80, "PNAKE LEGENDS", { fontSize: '36px', fill: '#ffb6c1', fontStyle: 'bold' }).setOrigin(0.5);
+        
+        // Бонус
+        const now = Date.now();
+        if (now - (App.user.lastBonus || 0) > 86400000) {
+            App.user.coins += 50; App.user.lastBonus = now; App.save();
+            alert("🎁 Ежедневный бонус +50 монет!");
+        }
+
+        // Кнопки
+        const createBtn = (y, txt, sc) => {
+            let b = this.add.container(width/2, y);
+            let bg = this.add.rectangle(0,0, 220, 55, 0xffffff, 0.1).setStrokeStyle(1, 0xffb6c1).setInteractive();
+            b.add([bg, this.add.text(0,0, txt, {fontSize:'20px'}).setOrigin(0.5)]);
+            bg.on('pointerdown', () => this.scene.start(sc));
+        };
+        createBtn(300, "ИГРАТЬ", 'GameScene');
+        createBtn(370, "МАГАЗИН", 'ShopScene');
+        createBtn(440, "РЕКОРДЫ", 'LeaderboardScene');
+
+        if (App.user.nick === "Bendi7080") {
+            let adm = this.add.text(width-30, 30, "⚙️", {fontSize:'30px'}).setInteractive();
+            adm.on('pointerdown', () => { if(prompt("Пароль:") === "BestEhsona") this.scene.start('AdminScene'); });
+        }
+    }
+}
+
+class GameScene extends Phaser.Scene {
+    constructor() { super('GameScene'); }
+    create() {
+        this.add.text(180, 300, "ИГРА\n(нажми чтобы выйти)", {align:'center'}).setOrigin(0.5).setInteractive().on('pointerdown', () => this.scene.start('MenuScene'));
+    }
+}
+
+class AdminScene extends Phaser.Scene {
+    constructor() { super('AdminScene'); }
+    create() {
+        this.add.text(180, 50, "АДМИНКА").setOrigin(0.5);
+        let b = this.add.text(180, 200, "ДОБАВИТЬ 1000 🪙").setOrigin(0.5).setInteractive();
+        b.on('pointerdown', () => { App.user.coins += 1000; App.save(); alert("Ок!"); });
+        this.add.text(180, 500, "ВЫХОД").setOrigin(0.5).setInteractive().on('pointerdown', () => this.scene.start('MenuScene'));
+    }
+}
+
+class ShopScene extends Phaser.Scene { constructor() { super('ShopScene'); } create() { this.add.text(180, 300, "МАГАЗИН").setOrigin(0.5); this.add.text(180, 500, "НАЗАД").setOrigin(0.5).setInteractive().on('pointerdown', () => this.scene.start('MenuScene')); } }
+class LeaderboardScene extends Phaser.Scene { constructor() { super('LeaderboardScene'); } create() { this.add.text(180, 300, "ЛИДЕРЫ").setOrigin(0.5); this.add.text(180, 500, "НАЗАД").setOrigin(0.5).setInteractive().on('pointerdown', () => this.scene.start('MenuScene')); } }
+
+const config = { type: Phaser.AUTO, width: 360, height: 640, parent: 'game-container', backgroundColor: '#000', scene: [BootScene, MenuScene, GameScene, ShopScene, LeaderboardScene, AdminScene] };
+const game = new Phaser.Game(config);
+</script>
 </body>
 </html>
