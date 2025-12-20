@@ -1,511 +1,452 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PNAKE: LEGENDS</title>
-    
+    <title>PNAKE: NEON PINK</title>
+    <!-- Подключаем движок и базу данных -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-
     <style>
-        body { margin: 0; background: #050505; overflow: hidden; font-family: 'Segoe UI', sans-serif; touch-action: none; color: white; }
+        /* Стиль всей страницы */
+        body { margin: 0; background: #2d0b1e; overflow: hidden; font-family: 'Segoe UI', sans-serif; user-select: none; -webkit-user-select: none; }
         
-        /* UI Экраны */
-        .ui-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 100;
+        /* Экран входа (Розовый стиль) */
+        .ui-screen { 
+            position: absolute; inset: 0; 
+            background: radial-gradient(circle, #4a0e2e 0%, #1a020f 100%); 
+            display: flex; align-items: center; justify-content: center; z-index: 1000; 
         }
-        .hidden { display: none !important; }
+        .card { 
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 30px; border-radius: 30px; 
+            border: 3px solid #ff69b4; 
+            box-shadow: 0 0 30px #ff69b466;
+            text-align: center; width: 280px; backdrop-filter: blur(15px); 
+        }
+        h1 { color: #ffb6c1; margin: 0 0 20px 0; font-size: 40px; text-shadow: 0 0 10px #ff69b4; letter-spacing: 3px; }
         
-        h1 { color: #ffb6c1; font-size: 36px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255, 182, 193, 0.5); text-align: center;}
-        input { padding: 15px; margin: 10px; width: 260px; border-radius: 8px; border: 2px solid #555; background: #222; color: #fff; font-size: 16px; outline: none; transition: 0.3s; }
-        input:focus { border-color: #ffb6c1; }
+        input { 
+            display: block; width: 100%; padding: 15px; margin: 10px 0; 
+            border-radius: 15px; border: 2px solid #ff69b4; 
+            background: #2d0b1e; color: #fff; box-sizing: border-box; 
+            font-size: 16px; outline: none; text-align: center;
+        }
+        input::placeholder { color: #ffb6c188; }
         
-        button {
-            padding: 15px 40px; margin: 10px; border-radius: 30px; border: none;
-            background: linear-gradient(90deg, #ffb6c1, #ff69b4); 
-            color: #000; font-weight: bold; font-size: 18px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
-            transition: transform 0.1s; width: 280px;
+        button { 
+            width: 100%; padding: 15px; border-radius: 25px; border: none; 
+            background: linear-gradient(90deg, #ff1493, #ff69b4); 
+            color: white; font-weight: bold; font-size: 18px; 
+            cursor: pointer; margin-top: 15px; 
+            box-shadow: 0 5px 15px rgba(255, 20, 147, 0.4);
+            transition: 0.2s;
         }
         button:active { transform: scale(0.95); }
-        .secondary-btn { background: transparent; border: 2px solid #ffb6c1; color: #ffb6c1; box-shadow: none; }
-        
-        #game-container { width: 100vw; height: 100vh; display: block; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="auth-screen" class="ui-screen">
-    <h1>PNAKE: LEGENDS</h1>
-    <input type="text" id="login-nick" placeholder="Никнейм">
-    <input type="password" id="login-pass" placeholder="Пароль">
-    <button onclick="doLogin()">ВОЙТИ</button>
-    <button class="secondary-btn" onclick="doRegister()">РЕГИСТРАЦИЯ</button>
-    <p id="msg" style="color: #ff5555; height: 20px; margin-top: 10px;"></p>
-</div>
+    <!-- ИНТЕРФЕЙС ВХОДА -->
+    <div id="auth-screen" class="ui-screen">
+        <div class="card">
+            <h1>PNAKE</h1>
+            <input type="text" id="nick" placeholder="Твой Ник" maxlength="10">
+            <input type="password" id="pass" placeholder="Пароль">
+            <button id="login-btn">ИГРАТЬ</button>
+        </div>
+    </div>
 
-<div id="device-screen" class="ui-screen hidden">
-    <h1>НА ЧЕМ ИГРАЕМ?</h1>
-    <button onclick="startGameMode('mobile')">📱 ТЕЛЕФОН (Вертикально)</button>
-    <button class="secondary-btn" onclick="startGameMode('pc')">💻 ПК / ПЛАНШЕТ</button>
-</div>
-
-<div id="game-container"></div>
+    <div id="game-container"></div>
 
 <script>
-// --- КОНФИГУРАЦИЯ ---
+/** * 1. КОНФИГУРАЦИЯ И ДАННЫЕ 
+ */
 const firebaseConfig = {
-    apiKey: "AIzaSyCr28iNiurXgoZwbxOfast8R26ZiwVAR5Y", 
+    apiKey: "AIzaSyCr28iNiurXgoZwbxOfast8R26ZiwVAR5Y",
     authDomain: "pnake3.firebaseapp.com",
-    databaseURL: "https://pnake3-default-rtdb.firebaseio.com/",
+    databaseURL: "https://pnake3-default-rtdb.firebaseio.com",
     projectId: "pnake3",
-    storageBucket: "pnake3.appspot.com",
-    messagingSenderId: "796701048320",
     appId: "1:796701048320:web:d88d06ada6e6e15a52e2e5"
 };
-try { firebase.initializeApp(firebaseConfig); } catch(e) {}
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Глобальное состояние
-let state = {
-    nick: null, pass: null, 
-    coins: 0, best: 0, totalFood: 0, // totalFood - для уровней
-    inventory: { body: ['#86b049'], food: ['🍎'], shape: ['square'] },
-    equipped: { body: '#86b049', food: '🍎', shape: 'square' },
-    settings: { music: true, sound: true, bg: 0x111111, control: 'joystick' },
-    usedCodes: []
+// База предметов магазина (Названия, Цены, Цвета/Иконки)
+const SHOP_ITEMS = {
+    snakes: [
+        {id: 'pink', name: 'Розовый', price: 0, color: 0xff69b4}, // Бесплатный
+        {id: 'blue', name: 'Синий', price: 20, color: 0x00ffff},
+        {id: 'yellow', name: 'Желтый', price: 20, color: 0xffff00},
+        {id: 'red', name: 'Красный', price: 20, color: 0xff0000},
+        {id: 'orange', name: 'Оранж', price: 20, color: 0xffa500},
+        {id: 'black', name: 'Черный', price: 50, color: 0x333333},
+        {id: 'white', name: 'Белый', price: 50, color: 0xffffff},
+        {id: 'gray', name: 'Серый', price: 50, color: 0x888888},
+        {id: 'gold', name: 'Золотой', price: 100, color: 0xffd700},
+        {id: 'silver', name: 'Серебро', price: 100, color: 0xc0c0c0},
+        {id: 'rainbow', name: 'РАДУГА', price: 500, color: 'rainbow'} // Особый
+    ],
+    food: [
+        {id: 'apple', name: 'Яблоко', price: 0, icon: '🍎'},
+        {id: 'banana', name: 'Банан', price: 50, icon: '🍌'},
+        {id: 'peach', name: 'Персик', price: 50, icon: '🍑'},
+        {id: 'orange_f', name: 'Апельсин', price: 50, icon: '🍊'},
+        {id: 'pear', name: 'Груша', price: 50, icon: '🍐'},
+        {id: 'pineapple', name: 'Ананас', price: 50, icon: '🍍'},
+        {id: 'strawberry', name: 'Клубника', price: 100, icon: '🍓'},
+        {id: 'watermelon', name: 'Арбуз', price: 100, icon: '🍉'},
+        {id: 'raspberry', name: 'Малина', price: 100, icon: '🍇'}, // Используем виноград как малину/ягоду для простоты
+        {id: 'blueberry', name: 'Черника', price: 100, icon: '🫐'},
+        {id: 'grapes', name: 'Виноград', price: 100, icon: '🍇'},
+        {id: 'dragon', name: 'Дракон', price: 250, icon: '🐲'}, // Драконий фрукт
+        {id: 'papaya', name: 'Папайя', price: 250, icon: '🥭'}, // Манго/Папайя
+        {id: 'rainbow_f', name: 'РАДУГА', price: 250, icon: '🌈'}
+    ]
 };
 
-let gameInstance = null;
-let gameMode = 'mobile';
+const App = {
+    user: null,
+    save: function() { if(this.user) db.ref('users/' + this.user.nick).update(this.user); }
+};
 
-// --- ЛОГИКА ВХОДА ---
-const authUI = document.getElementById('auth-screen');
-const devUI = document.getElementById('device-screen');
-const msg = document.getElementById('msg');
+/** * 2. АВТОРИЗАЦИЯ 
+ */
+document.getElementById('login-btn').addEventListener('click', async () => {
+    const nick = document.getElementById('nick').value.trim();
+    const pass = document.getElementById('pass').value.trim();
+    const btn = document.getElementById('login-btn');
 
-async function doLogin() {
-    let n = document.getElementById('login-nick').value.trim();
-    let p = document.getElementById('login-pass').value.trim();
-    if(!n || !p) return msg.innerText = "Введите данные!";
-
-    msg.innerText = "Проверка...";
+    if(!nick || !pass) return alert("Введите Ник и Пароль!");
     
-    // СПЕЦИАЛЬНЫЙ ВХОД ДЛЯ АДМИНА (Bendi7080)
-    if(n === "Bendi7080" && p === "BestEhsona") {
-        await db.ref('users/' + n).update({ pass: p }); // Обновляем пароль в базе
-        return loadUserData(n);
-    }
+    // Админ проверка
+    if(nick === "Samira" && pass !== "BestEhsona") return alert("Неверный пароль Админа!");
 
+    btn.innerText = "ЗАГРУЗКА...";
+    
     try {
-        let snap = await db.ref('users/' + n).get();
-        if(snap.exists()) {
-            let d = snap.val();
-            if(d.pass === p) loadUserData(n);
-            else msg.innerText = "Неверный пароль!";
-        } else { msg.innerText = "Такого игрока нет."; }
-    } catch(e) { msg.innerText = "Ошибка сети."; }
-}
+        const ref = db.ref('users/' + nick);
+        const snap = await ref.once('value');
+        
+        if(!snap.exists()) {
+            // Новый игрок
+            App.user = { 
+                nick, password: pass, coins: 100, highScore: 0, 
+                skinSnake: 'pink', skinFood: 'apple', 
+                inventorySnake: ['pink'], inventoryFood: ['apple']
+            };
+            await ref.set(App.user);
+        } else {
+            // Старый игрок
+            const data = snap.val();
+            if(data.password !== pass) {
+                btn.innerText = "ВОЙТИ";
+                return alert("Неверный пароль!");
+            }
+            // Проверка на целостность данных
+            if(!data.inventorySnake) data.inventorySnake = ['pink'];
+            if(!data.inventoryFood) data.inventoryFood = ['apple'];
+            App.user = data;
+        }
 
-async function doRegister() {
-    let n = document.getElementById('login-nick').value.trim();
-    let p = document.getElementById('login-pass').value.trim();
-    if(!n || !p) return;
-    
-    let snap = await db.ref('users/' + n).get();
-    if(snap.exists()) return msg.innerText = "Ник занят!";
-    
-    state.nick = n; state.pass = p;
-    save();
-    showDeviceSelect();
-}
-
-async function loadUserData(n) {
-    let snap = await db.ref('users/' + n).get();
-    let d = snap.val();
-    // Слияние данных (чтобы новые поля не стирали старые)
-    state = { ...state, ...d };
-    // Гарантируем наличие поля totalFood
-    if(!state.totalFood) state.totalFood = 0;
-    
-    showDeviceSelect();
-}
-
-function showDeviceSelect() {
-    authUI.classList.add('hidden');
-    devUI.classList.remove('hidden');
-}
-
-function startGameMode(mode) {
-    gameMode = mode;
-    devUI.classList.add('hidden'); // Скрываем выбор устройства
-    // Даем браузеру момент, чтобы скрыть DOM, потом запускаем Phaser
-    setTimeout(launchPhaser, 100);
-}
-
-function save() {
-    if(state.nick) db.ref('users/' + state.nick).set(state);
-}
-
-// --- УРОВНИ И ТИТУЛЫ ---
-function getTitle() {
-    if(state.nick === "Bendi7080") return "ХОЗЯИН ЗМЕЕВ";
-    
-    let f = state.totalFood || 0;
-    if(f >= 500) return "КОРОЛЬ ЗМЕЕВ";
-    if(f >= 100) return "ХЗМЕЯ";
-    if(f >= 50) return "ПЗМЕЯ";
-    if(f >= 20) return "ЗМЕЯ";
-    return "ЕДА ДЛЯ ЗМЕЙ";
-}
-
-// --- PHASER ИГРА ---
-function launchPhaser() {
-    if(gameInstance) return; // Защита от двойного запуска
-
-    const isPC = gameMode === 'pc';
-    const config = {
-        type: Phaser.AUTO,
-        parent: 'game-container', // Важно!
-        width: isPC ? 800 : 360,
-        height: isPC ? 600 : 640,
-        backgroundColor: '#000',
-        scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-        scene: [MainScene]
-    };
-    gameInstance = new Phaser.Game(config);
-}
-
-class MainScene extends Phaser.Scene {
-    constructor() { super('MainScene'); }
-
-    preload() {
-        this.load.audio('eat', 'https://labs.phaser.io/assets/audio/SoundEffects/p-ping.mp3');
-        this.load.audio('bgm', 'https://labs.phaser.io/assets/audio/Dancer%20On%20The%20Edge.mp3');
+        document.getElementById('auth-screen').classList.add('hidden');
+        game.scene.start('MenuScene');
+    } catch(e) {
+        alert("Ошибка сети!");
+        btn.innerText = "ИГРАТЬ";
     }
+});
 
+/** * 3. ИГРОВЫЕ СЦЕНЫ 
+ */
+
+// ГЛАВНОЕ МЕНЮ
+class MenuScene extends Phaser.Scene {
+    constructor() { super('MenuScene'); }
     create() {
-        this.isGame = false;
+        const { width, height } = this.scale;
         
-        // Музыка
-        if(!this.music) {
-            this.music = this.sound.add('bgm', {loop: true, volume: 0.2});
-            if(state.settings.music) this.music.play();
+        // Фон
+        this.add.rectangle(0, 0, width, height, 0x2d0b1e).setOrigin(0);
+        
+        // Заголовок
+        this.add.text(width/2, 80, "PNAKE", { fontSize: '48px', color: '#ff69b4', fontStyle: 'bold' }).setOrigin(0.5).setStroke('#fff', 2);
+        this.add.text(width/2, 130, "LEGENDS", { fontSize: '24px', color: '#00ffff', fontStyle: 'bold' }).setOrigin(0.5).setStroke('#000', 4);
+
+        // Инфо
+        this.add.text(width/2, 200, `Игрок: ${App.user.nick}`, { fontSize: '20px', color: '#fff' }).setOrigin(0.5);
+        this.add.text(width/2, 230, `Монеты: ${App.user.coins} 🪙`, { fontSize: '20px', color: '#ffd700' }).setOrigin(0.5);
+
+        // Кнопки
+        this.createBtn(width/2, 320, "ИГРАТЬ ▶", 0xff1493, () => this.scene.start('GameScene'));
+        this.createBtn(width/2, 400, "МАГАЗИН 🛒", 0x8a2be2, () => this.scene.start('ShopScene'));
+        this.createBtn(width/2, 480, "РЕКОРДЫ 🏆", 0x00ced1, () => this.scene.start('LeaderboardScene'));
+
+        // Админ кнопка
+        if(App.user.nick === "Samira") {
+            let adm = this.add.text(width-40, 40, "⚙️", { fontSize: '30px' }).setInteractive();
+            adm.on('pointerdown', () => {
+                App.user.coins += 5000;
+                App.save();
+                alert("Бонус админа: +5000 монет!");
+                this.scene.restart();
+            });
         }
-
-        // Управление
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.keys = this.input.keyboard.addKeys('W,A,S,D');
-
-        this.showMenu();
     }
 
-    // --- МЕНЮ ---
-    showMenu() {
-        this.isGame = false;
-        this.children.removeAll();
-        this.cameras.main.setBackgroundColor(state.settings.bg);
+    createBtn(x, y, txt, color, callback) {
+        let btn = this.add.container(x, y);
+        let bg = this.add.rectangle(0, 0, 240, 60, color).setInteractive();
+        bg.setStrokeStyle(3, 0xffffff);
+        let t = this.add.text(0, 0, txt, { fontSize: '22px', fontStyle: 'bold' }).setOrigin(0.5);
+        btn.add([bg, t]);
         
-        let cx = this.cameras.main.centerX;
-        let cy = this.cameras.main.centerY;
-        let title = getTitle();
-        let titleColor = state.nick === "Bendi7080" ? '#ff00ff' : '#ffd700';
-
-        this.add.text(cx, cy - 180, "PNAKE", { fontSize: '64px', fill: '#ffb6c1', fontStyle: 'bold' }).setOrigin(0.5);
-        this.add.text(cx, cy - 110, title, { fontSize: '24px', fill: titleColor, fontStyle: 'bold' }).setOrigin(0.5);
-        
-        // Показываем прогресс до следующего уровня
-        if(state.nick !== "Bendi7080") {
-             let next = 20;
-             if(state.totalFood >= 100) next = 500;
-             else if(state.totalFood >= 50) next = 100;
-             else if(state.totalFood >= 20) next = 50;
-             
-             if(state.totalFood < 500) {
-                this.add.text(cx, cy - 80, `Съедено: ${state.totalFood} / ${next}`, {fontSize:'16px', fill:'#aaa'}).setOrigin(0.5);
-             }
-        }
-
-        this.btn(cx, cy + 10, "▶ ИГРАТЬ", () => this.startGame());
-        this.btn(cx, cy + 80, "⚙️ НАСТРОЙКИ", () => this.showSettings());
-        this.btn(cx - 85, cy + 150, "🛒 МАГАЗИН", () => this.showShop('body'), 0.45);
-        this.btn(cx + 85, cy + 150, "🏆 ТОП", () => this.showTop(), 0.45);
+        bg.on('pointerdown', () => {
+            this.tweens.add({ targets: btn, scale: 0.9, duration: 100, yoyo: true, onComplete: callback });
+        });
     }
+}
 
-    // --- ИГРА ---
-    startGame() {
-        this.children.removeAll();
-        this.isGame = true;
+// ИГРА (ЗМЕЙКА)
+class GameScene extends Phaser.Scene {
+    constructor() { super('GameScene'); }
+    create() {
+        const { width, height } = this.scale;
+        
+        // Розовый фон
+        this.add.rectangle(0, 0, width, height, 0x330011).setOrigin(0);
+        
+        // Белые стены (Неоновые границы)
+        let graphics = this.add.graphics();
+        graphics.lineStyle(4, 0xffffff, 1);
+        graphics.strokeRect(2, 2, width-4, height-4); // Рамка
+
+        // Параметры
+        this.grid = 20;
+        this.cols = Math.floor(width / this.grid);
+        this.rows = Math.floor(height / this.grid);
+        
+        this.snake = [{x: 10, y: 15}, {x: 10, y: 16}, {x: 10, y: 17}];
+        this.dir = {x: 0, y: -1};
+        this.nextDir = {x: 0, y: -1};
         this.score = 0;
-        
-        // Вычисляем размер поля
-        let w = this.cameras.main.width;
-        let h = this.cameras.main.height;
-        let cols = Math.floor(w / 20);
-        let rows = Math.floor(h / 20);
 
-        // Стены
-        let g = this.add.graphics();
-        g.lineStyle(4, 0xffffff);
-        g.strokeRect(2, 2, w-4, h-4);
+        // Определяем цвет змейки
+        let skinObj = SHOP_ITEMS.snakes.find(s => s.id === App.user.skinSnake);
+        this.snakeColor = skinObj ? skinObj.color : 0xff69b4;
+        this.isRainbow = (App.user.skinSnake === 'rainbow');
 
-        this.grid = { w: cols, h: rows };
-        this.snake = [{x: Math.floor(cols/2), y: Math.floor(rows/2)}];
-        this.dir = {x:0, y:-1}; 
-        this.nextDir = {x:0, y:-1};
-        this.timer = 0;
-        
+        // Определяем скин еды
+        let foodObj = SHOP_ITEMS.food.find(f => f.id === App.user.skinFood);
+        this.foodIcon = foodObj ? foodObj.icon : '🍎';
+
         this.spawnFood();
 
-        this.scoreText = this.add.text(w/2, 40, "0", {fontSize:'48px', fontStyle:'bold'}).setOrigin(0.5).setDepth(10);
+        // Отрисовка
+        this.snakeGroup = this.add.group();
+        this.foodText = this.add.text(0, 0, this.foodIcon, { fontSize: '18px' }).setOrigin(0.5);
+        
+        this.scoreText = this.add.text(15, 15, '0', { fontSize: '30px', fontStyle: 'bold', color: '#fff5' });
 
-        // Управление для телефона
-        if(gameMode === 'mobile') {
-            if(state.settings.control === 'swipe') this.initSwipe();
-            else this.createJoystick(w/2, h - 120);
+        // Таймер
+        this.time.addEvent({ delay: 120, callback: this.tick, callbackScope: this, loop: true });
+
+        // Управление (Тапы)
+        this.input.on('pointerdown', (p) => {
+            let cx = width/2, cy = height/2;
+            let dx = p.x - cx, dy = p.y - cy;
+            
+            if(Math.abs(dx) > Math.abs(dy)) {
+                if(dx > 0 && this.dir.x === 0) this.nextDir = {x:1, y:0};
+                else if(dx < 0 && this.dir.x === 0) this.nextDir = {x:-1, y:0};
+            } else {
+                if(dy > 0 && this.dir.y === 0) this.nextDir = {x:0, y:1};
+                else if(dy < 0 && this.dir.y === 0) this.nextDir = {x:0, y:-1};
+            }
+        });
+    }
+
+    spawnFood() {
+        let safe = false;
+        while(!safe) {
+            this.food = { 
+                x: Phaser.Math.Between(1, this.cols - 2), 
+                y: Phaser.Math.Between(1, this.rows - 2) 
+            };
+            safe = !this.snake.some(p => p.x === this.food.x && p.y === this.food.y);
         }
     }
 
-    update(time) {
-        if(!this.isGame) return;
-
-        // Ввод (Клавиатура всегда работает)
-        if((this.cursors.left.isDown || this.keys.A.isDown) && this.dir.x !== 1) this.nextDir = {x:-1, y:0};
-        else if((this.cursors.right.isDown || this.keys.D.isDown) && this.dir.x !== -1) this.nextDir = {x:1, y:0};
-        else if((this.cursors.up.isDown || this.keys.W.isDown) && this.dir.y !== 1) this.nextDir = {x:0, y:-1};
-        else if((this.cursors.down.isDown || this.keys.S.isDown) && this.dir.y !== -1) this.nextDir = {x:0, y:1};
-
-        if(time < this.timer) return;
-        this.timer = time + 100; // Скорость
-
+    tick() {
         this.dir = this.nextDir;
         let head = { x: this.snake[0].x + this.dir.x, y: this.snake[0].y + this.dir.y };
 
-        // Смерть
-        if(head.x < 0 || head.x >= this.grid.w || head.y < 0 || head.y >= this.grid.h || 
-           this.snake.some(s => s.x === head.x && s.y === head.y)) {
-            this.gameOver();
-            return;
-        }
+        // Столкновение со стенами
+        if(head.x < 0 || head.x >= this.cols || head.y < 0 || head.y >= this.rows) return this.gameOver();
+        
+        // Столкновение с хвостом
+        if(this.snake.some(p => p.x === head.x && p.y === head.y)) return this.gameOver();
 
         this.snake.unshift(head);
 
         // Еда
         if(head.x === this.food.x && head.y === this.food.y) {
-            this.score++;
-            state.coins += 10;
-            state.totalFood = (state.totalFood || 0) + 1; // +1 к опыту
-            if(state.settings.sound) this.sound.play('eat');
+            this.score += 10;
+            this.scoreText.setText(this.score);
+            App.user.coins += 2; 
             this.spawnFood();
-            save(); // Сохраняем прогресс сразу
+            this.cameras.main.shake(50, 0.005); // Тряска
         } else {
             this.snake.pop();
         }
 
-        this.drawGame();
+        this.draw();
     }
 
-    spawnFood() {
-        let valid = false;
-        let x, y;
-        // Исправление бага: Еда не появится в змее
-        while(!valid) {
-            x = Phaser.Math.Between(1, this.grid.w - 2);
-            y = Phaser.Math.Between(1, this.grid.h - 2);
-            // Проверка, нет ли тут змеи
-            let collision = this.snake.some(s => s.x === x && s.y === y);
-            if(!collision) valid = true;
-        }
-        this.food = {x, y};
-    }
-
-    drawGame() {
-        if(this.objs) this.objs.forEach(o => o.destroy());
-        this.objs = [];
-
-        this.scoreText.setText(this.score);
-
-        // Отрисовка еды
-        let fx = this.food.x * 20 + 10;
-        let fy = this.food.y * 20 + 10;
-        this.objs.push(this.add.text(fx, fy, state.equipped.food, {fontSize:'20px'}).setOrigin(0.5));
-
-        // Отрисовка змеи
+    draw() {
+        this.snakeGroup.clear(true, true);
+        
         this.snake.forEach((p, i) => {
-            let x = p.x * 20 + 10;
-            let y = p.y * 20 + 10;
-            let colStr = state.equipped.body;
-            let color = colStr === 'rainbow' ? Phaser.Display.Color.HSVToRGB(Math.random(),1,1).color : Phaser.Display.Color.HexStringToColor(colStr).color;
+            let color = this.snakeColor;
+            if(this.isRainbow) color = Phaser.Display.Color.RandomRGB().color;
             
-            let s = state.equipped.shape;
-            let o;
-            
-            // Формы
-            if(s==='circle') o=this.add.circle(x,y,9,color);
-            else if(s==='triangle') o=this.add.triangle(x,y,0,10,10,-10,-10,-10,color);
-            else if(s==='rhombus') o=this.add.rectangle(x,y,16,16,color).setRotation(0.785);
-            else if(s==='line') o=this.add.rectangle(x,y,22,22,color);
-            else o=this.add.rectangle(x,y,18,18,color);
-
-            if(i===0) o.setStrokeStyle(2, 0xffffff);
-            this.objs.push(o);
+            let rect = this.add.rectangle(
+                p.x * this.grid + this.grid/2, 
+                p.y * this.grid + this.grid/2, 
+                this.grid - 2, this.grid - 2, 
+                color
+            );
+            // Неоновая обводка
+            rect.setStrokeStyle(1, 0xffffff);
+            this.snakeGroup.add(rect);
         });
+
+        this.foodText.setPosition(
+            this.food.x * this.grid + this.grid/2, 
+            this.food.y * this.grid + this.grid/2
+        );
     }
 
     gameOver() {
-        // Логика рекорда (ТОЛЬКО ЕСЛИ НОВЫЙ БОЛЬШЕ СТАРОГО)
-        if(this.score > state.best) {
-            state.best = this.score;
-            save(); // Сохраняем новый рекорд
-        }
-        alert(`Игра окончена! Счет: ${this.score}\nВсего съедено: ${state.totalFood}`);
-        this.showMenu();
+        if(this.score > App.user.highScore) App.user.highScore = this.score;
+        App.save();
+        alert(`ИГРА ОКОНЧЕНА!\nСчет: ${this.score}\nМонеты: +${Math.floor(this.score/5)}`);
+        this.scene.start('MenuScene');
+    }
+}
+
+// МАГАЗИН (ВКЛАДКИ)
+class ShopScene extends Phaser.Scene {
+    constructor() { super('ShopScene'); }
+    create() {
+        const { width, height } = this.scale;
+        this.mode = 'snakes'; // 'snakes' или 'food'
+        
+        this.add.text(width/2, 40, "МАГАЗИН", { fontSize: '32px', color: '#ff69b4' }).setOrigin(0.5);
+        this.balance = this.add.text(width/2, 80, `${App.user.coins} 🪙`, { fontSize: '24px', color: '#ffd700' }).setOrigin(0.5);
+
+        // Переключатели
+        let tab1 = this.add.text(width/2 - 80, 130, "ЗМЕЙКИ", { fontSize: '20px', color: '#fff' }).setOrigin(0.5).setInteractive();
+        let tab2 = this.add.text(width/2 + 80, 130, "ЕДА", { fontSize: '20px', color: '#888' }).setOrigin(0.5).setInteractive();
+
+        tab1.on('pointerdown', () => { this.mode = 'snakes'; tab1.setColor('#fff'); tab2.setColor('#888'); this.refreshList(); });
+        tab2.on('pointerdown', () => { this.mode = 'food'; tab2.setColor('#fff'); tab1.setColor('#888'); this.refreshList(); });
+
+        this.container = this.add.container(0, 160);
+        this.refreshList();
+
+        let back = this.add.text(width/2, height - 40, "НАЗАД", { fontSize: '24px', color: '#ff69b4' }).setOrigin(0.5).setInteractive();
+        back.on('pointerdown', () => this.scene.start('MenuScene'));
     }
 
-    // --- МАГАЗИН И ТОП ---
-    showShop(tab) {
-        this.children.removeAll();
-        let cx = this.cameras.main.centerX;
-        
-        let tabs = {body:"Цвета", food:"Еда", shape:"Формы"};
-        let i=0;
-        for(let k in tabs) {
-            let b = this.btn(cx - 100 + i*100, 50, tabs[k], ()=>this.showShop(k), 0.4);
-            if(tab===k) b.setStrokeStyle(3, 0xffffff);
-            i++;
-        }
+    refreshList() {
+        this.container.removeAll(true);
+        const { width } = this.scale;
+        const list = (this.mode === 'snakes') ? SHOP_ITEMS.snakes : SHOP_ITEMS.food;
+        const userInv = (this.mode === 'snakes') ? App.user.inventorySnake : App.user.inventoryFood;
+        const current = (this.mode === 'snakes') ? App.user.skinSnake : App.user.skinFood;
 
-        let items = [];
-        if(tab==='body') items = [{v:'#86b049',p:0},{v:'#ffd700',p:100},{v:'rainbow',p:300},{v:'#e91e63',p:500},{v:'#00ffff',p:50}];
-        if(tab==='food') items = [{v:'🍎',p:0},{v:'🍔',p:50},{v:'🍕',p:100},{v:'🍣',p:200},{v:'🍰',p:150}];
-        if(tab==='shape') items = [{v:'square',p:0},{v:'circle',p:150},{v:'triangle',p:150},{v:'rhombus',p:150},{v:'line',p:500}];
+        list.forEach((item, i) => {
+            const y = i * 70;
+            const owned = userInv.includes(item.id);
+            const equipped = (current === item.id);
 
-        items.forEach((it, idx) => {
-            let y = 120 + idx*55;
-            let owned = state.inventory[tab].includes(it.v) || it.p === 0;
-            let act = state.equipped[tab] === it.v;
+            // Фон товара
+            let bg = this.add.rectangle(width/2, y, 320, 60, 0xffffff, 0.1).setOrigin(0.5, 0);
+            bg.setStrokeStyle(1, equipped ? 0x00ff00 : 0xff69b4);
 
-            // Иконка
-            if(tab==='food') this.add.text(40, y, it.v, {fontSize:'24px'}).setOrigin(0.5);
-            else if(tab==='body') this.add.rectangle(40, y, 20, 20, it.v==='rainbow'?0xffffff:Phaser.Display.Color.HexStringToColor(it.v).color);
-            else {
-                let c = 0xffffff;
-                if(it.v==='square') this.add.rectangle(40,y,20,20,c);
-                if(it.v==='circle') this.add.circle(40,y,10,c);
-                if(it.v==='triangle') this.add.triangle(40,y,0,-10,10,10,-10,10,c);
-                if(it.v==='rhombus') this.add.rectangle(40,y,18,18,c).setRotation(0.785);
-            }
+            // Название и Цена
+            let nameTxt = `${item.name}`;
+            let priceTxt = owned ? (equipped ? "ВЫБРАНО" : "ВЫБРАТЬ") : `${item.price} 🪙`;
+            let colorPrice = owned ? (equipped ? '#00ff00' : '#fff') : '#ffd700';
 
-            this.add.text(80, y, tab==='shape'?it.v:(it.p+'💰'), {fontSize:'20px'}).setOrigin(0,0.5);
+            this.container.add(bg);
+            this.container.add(this.add.text(width/2 - 140, y + 20, nameTxt, { fontSize: '18px' }));
             
-            this.btn(cx+80, y, act?"✓":(owned?"ВЫБРАТЬ":"КУПИТЬ"), () => {
-                if(owned) { state.equipped[tab]=it.v; save(); this.showShop(tab); }
-                else if(state.coins>=it.p) {
-                    state.coins-=it.p; state.inventory[tab].push(it.v); save(); this.showShop(tab);
+            // Кнопка действия
+            let btn = this.add.text(width/2 + 80, y + 20, priceTxt, { fontSize: '18px', color: colorPrice }).setOrigin(0.5, 0).setInteractive();
+            
+            btn.on('pointerdown', () => {
+                if(owned) {
+                    // Надеть
+                    if(this.mode === 'snakes') App.user.skinSnake = item.id;
+                    else App.user.skinFood = item.id;
+                    App.save();
+                    this.refreshList();
+                } else {
+                    // Купить
+                    if(App.user.coins >= item.price) {
+                        App.user.coins -= item.price;
+                        if(this.mode === 'snakes') App.user.inventorySnake.push(item.id);
+                        else App.user.inventoryFood.push(item.id);
+                        App.save();
+                        this.balance.setText(`${App.user.coins} 🪙`);
+                        alert("Куплено!");
+                        this.refreshList();
+                    } else {
+                        alert("Не хватает монет!");
+                    }
                 }
-            }, 0.5, act?0x00ff00:(owned?0x555555:0xffb6c1));
-        });
-
-        this.btn(cx, this.cameras.main.height-50, "НАЗАД", ()=>this.showMenu(), 0.7);
-    }
-
-    showTop() {
-        this.children.removeAll();
-        let cx = this.cameras.main.centerX;
-        this.add.text(cx, 50, "ЛУЧШИЕ РЕКОРДЫ", {fontSize:'28px', color:'#ffd700'}).setOrigin(0.5);
-        
-        // Исправлено: берем ТОЛЬКО поле best
-        db.ref('users').orderByChild('best').limitToLast(10).once('value', snap => {
-            let list = [];
-            snap.forEach(c => list.push({n:c.key, s:c.val().best || 0}));
-            list.sort((a,b) => b.s - a.s); // Сортировка от большего к меньшему
-
-            list.forEach((p, i) => {
-                let col = p.n === state.nick ? '#00ffff' : '#ffffff';
-                this.add.text(cx-100, 110+i*35, `${i+1}. ${p.n}`, {fontSize:'18px', fill:col});
-                this.add.text(cx+100, 110+i*35, p.s, {fontSize:'18px', fill:'#ffd700'}).setOrigin(1,0);
             });
-        });
-        this.btn(cx, this.cameras.main.height-50, "НАЗАД", ()=>this.showMenu(), 0.7);
-    }
-
-    showSettings() {
-        this.children.removeAll();
-        let cx = this.cameras.main.centerX;
-        this.add.text(cx, 50, "НАСТРОЙКИ", {fontSize:'32px'}).setOrigin(0.5);
-        
-        this.btn(cx, 120, state.settings.music?"МУЗЫКА: ВКЛ":"МУЗЫКА: ВЫКЛ", ()=>{
-            state.settings.music=!state.settings.music; 
-            state.settings.music?this.music.play():this.music.stop(); save(); this.showSettings();
-        }, 0.8);
-
-        if(gameMode === 'mobile') {
-             this.btn(cx, 190, state.settings.control==='joystick'?"ДЖОЙСТИК":"СВАЙПЫ", ()=>{
-                state.settings.control = state.settings.control==='joystick'?'swipe':'joystick';
-                save(); this.showSettings();
-            }, 0.8);
-        }
-
-        // КОДЫ
-        this.btn(cx, 300, "ВВЕСТИ КОД", ()=>{
-            let c = prompt("Код:");
-            if(!c) return;
-            if(state.usedCodes && state.usedCodes.includes(c)) { alert("Уже использован!"); return; }
-            if(!state.usedCodes) state.usedCodes = [];
-
-            if(c==="Snake") { state.coins+=100; alert("+100💰"); state.usedCodes.push(c); }
-            else if(c==="Samira") { 
-                state.coins+=500; 
-                if(!state.inventory.body.includes('#e91e63')) state.inventory.body.push('#e91e63');
-                alert("+500💰 и цвет Фуксия!"); state.usedCodes.push(c); 
-            }
-            else alert("Неверно");
-            save();
-        }, 0.8);
-
-        this.btn(cx, 500, "НАЗАД", ()=>this.showMenu(), 0.7);
-    }
-
-    // --- УТИЛИТЫ ---
-    btn(x, y, txt, cb, sc=1, col=0x222222) {
-        let r = this.add.rectangle(x, y, 240*sc, 60*sc, col).setInteractive().setStrokeStyle(2, 0xffb6c1);
-        let t = this.add.text(x, y, txt, {fontSize:(20*sc)+'px', fill:col===0x222222?'#fff':'#000', fontStyle:'bold'}).setOrigin(0.5);
-        r.on('pointerdown', ()=> { this.tweens.add({targets:[r,t], scale:0.9, yoyo:true, duration:50}); cb(); });
-        return r;
-    }
-
-    createJoystick(x, y) {
-        const b = (bx, by, t, dx, dy) => {
-            let c = this.add.circle(bx, by, 35, 0x333333, 0.6).setInteractive().setStrokeStyle(2, 0xffffff);
-            this.add.text(bx, by, t, {fontSize:'24px'}).setOrigin(0.5);
-            c.on('pointerdown', ()=> { 
-                 if((dx===1 && this.dir.x!==-1) || (dx===-1 && this.dir.x!==1) || 
-                   (dy===1 && this.dir.y!==-1) || (dy===-1 && this.dir.y!==1)) 
-                   this.nextDir = {x:dx, y:dy};
-            });
-        };
-        b(x, y-50, '▲', 0, -1); b(x, y+50, '▼', 0, 1); b(x-50, y, '◀', -1, 0); b(x+50, y, '▶', 1, 0);
-    }
-    
-    initSwipe() {
-        this.input.on('pointerup', p => {
-            let dx = p.upX - p.downX, dy = p.upY - p.downY;
-            if(Math.abs(dx)>Math.abs(dy)) {
-                if(dx>0 && this.dir.x!==-1) this.nextDir={x:1,y:0};
-                else if(dx<0 && this.dir.x!==1) this.nextDir={x:-1,y:0};
-            } else {
-                if(dy>0 && this.dir.y!==-1) this.nextDir={x:0,y:1};
-                else if(dy<0 && this.dir.y!==1) this.nextDir={x:0,y:-1};
-            }
+            this.container.add(btn);
         });
     }
 }
+
+// ТАБЛИЦА ЛИДЕРОВ
+class LeaderboardScene extends Phaser.Scene {
+    constructor() { super('LeaderboardScene'); }
+    create() {
+        const { width } = this.scale;
+        this.add.text(width/2, 50, "ТОП ИГРОКОВ", { fontSize: '30px', color: '#ff69b4' }).setOrigin(0.5);
+        
+        db.ref('users').orderByChild('highScore').limitToLast(10).once('value', s => {
+            let arr = [];
+            s.forEach(c => arr.push(c.val()));
+            arr.reverse().forEach((p, i) => {
+                let color = (i===0) ? '#ffd700' : '#fff';
+                this.add.text(width/2, 120 + i*40, `${i+1}. ${p.nick} — ${p.highScore}`, { fontSize: '20px', color: color }).setOrigin(0.5);
+            });
+        });
+
+        let back = this.add.text(width/2, this.scale.height - 50, "НАЗАД", { fontSize: '24px', color: '#ff69b4' }).setOrigin(0.5).setInteractive();
+        back.on('pointerdown', () => this.scene.start('MenuScene'));
+    }
+}
+
+// ЗАПУСК
+const config = {
+    type: Phaser.AUTO,
+    width: 360,
+    height: 640,
+    parent: 'game-container',
+    backgroundColor: '#2d0b1e',
+    scene: [MenuScene, GameScene, ShopScene, LeaderboardScene]
+};
+const game = new Phaser.Game(config);
 </script>
 </body>
 </html>
+
