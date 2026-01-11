@@ -3,33 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pnake - Full Game</title>
+    <title>Pnake - Final Version</title>
     <style>
         :root { --neon: #ff007f; --bg: #1a1a2e; --panel: #16213e; }
         * { touch-action: manipulation; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; justify-content: center; }
+        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; display: flex; justify-content: center; }
         #app { width: 100%; max-width: 500px; height: 100vh; position: relative; display: flex; flex-direction: column; border: 2px solid var(--neon); }
-        
         .screen { display: none; flex-direction: column; align-items: center; padding: 20px; flex-grow: 1; overflow-y: auto; width: 100%; }
         .active { display: flex; }
-        
-        h1 { color: var(--neon); text-shadow: 0 0 15px var(--neon); font-size: 3.5rem; margin: 20px 0; }
-        .currency { color: #ffd700; font-size: 1.3rem; font-weight: bold; margin: 10px 0; }
-        
-        button { background: var(--panel); color: white; border: 2px solid var(--neon); padding: 15px; margin: 8px; width: 85%; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.95); background: var(--neon); }
-        input { padding: 15px; margin: 10px; width: 85%; background: #0f3460; border: 1px solid var(--neon); color: white; border-radius: 8px; font-size: 1rem; }
-        
-        canvas { background: black; width: 90vw; height: 90vw; max-width: 360px; max-height: 360px; border: 4px solid #000; }
-        
-        /* Джойстик */
+        h1 { color: var(--neon); text-shadow: 0 0 15px var(--neon); font-size: 3rem; margin: 20px 0; }
+        .currency { color: #ffd700; font-size: 1.2rem; font-weight: bold; margin: 10px 0; }
+        button { background: var(--panel); color: white; border: 2px solid var(--neon); padding: 15px; margin: 8px; width: 85%; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+        button:active { background: var(--neon); }
+        input { padding: 15px; margin: 10px; width: 85%; background: #0f3460; border: 1px solid var(--neon); color: white; border-radius: 8px; }
+        canvas { background: black; width: 90vw; height: 90vw; max-width: 360px; max-height: 360px; border: 2px solid var(--neon); }
         .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 90%; margin-top: 15px; }
-        .c-btn { background: rgba(255,0,127,0.1); border: 2px solid var(--neon); height: 70px; display: flex; justify-content: center; align-items: center; font-size: 2rem; border-radius: 15px; }
-        
-        /* Магазин */
-        .shop-item { width: 100%; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid var(--neon); }
-        .shop-item span { font-size: 0.9rem; }
-        .shop-item button { width: auto; padding: 5px 15px; margin: 0; font-size: 0.8rem; }
+        .c-btn { background: rgba(255,0,127,0.1); border: 1px solid var(--neon); height: 70px; display: flex; justify-content: center; align-items: center; font-size: 2rem; border-radius: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid var(--neon); padding: 8px; text-align: center; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -38,53 +29,44 @@
         <h1>PNAKE</h1>
         <input type="text" id="login" placeholder="Логин">
         <input type="password" id="pass" placeholder="Пароль">
-        <button onclick="handleAuth('login')">ВОЙТИ</button>
-        <button onclick="handleAuth('reg')" style="border-color: #555; font-size: 0.9rem;">Регистрация</button>
+        <button id="auth-login-btn">ВОЙТИ</button>
+        <button id="auth-reg-btn" style="border-color: #555; font-size: 0.9rem;">Регистрация</button>
     </div>
 
     <div id="scr-menu" class="screen">
         <div class="currency">💰 Зменеты: <span id="u-coins">0</span></div>
         <h2 id="u-name">Игрок</h2>
-        <button onclick="show('scr-game'); startGame();" style="height: 100px; background: var(--neon);">ИГРАТЬ</button>
-        <button onclick="show('scr-shop'); renderShop('colors');">МАГАЗИН</button>
-        <button onclick="show('scr-top'); loadTop();">РЕКОРДЫ</button>
-        <button onclick="show('scr-settings')">⚙️ НАСТРОЙКИ</button>
+        <button id="menu-start-btn" style="height: 80px; background: var(--neon);">ИГРАТЬ</button>
+        <button id="menu-top-btn">РЕКОРДЫ</button>
+        <button onclick="location.reload()">ВЫХОД</button>
     </div>
 
-    <div id="scr-shop" class="screen">
-        <div class="currency">Баланс: <span id="s-coins">0</span></div>
-        <div style="display:flex; gap:5px; width:100%;">
-            <button onclick="renderShop('colors')" style="font-size:0.7rem; padding:10px;">ЦВЕТА</button>
-            <button onclick="renderShop('food')" style="font-size:0.7rem; padding:10px;">ЕДА</button>
-        </div>
-        <div id="shop-list" style="width:100%; margin-top:15px;"></div>
-        <button onclick="show('scr-menu')">НАЗАД</button>
-    </div>
-
-    <div id="scr-settings" class="screen">
-        <h2>Настройки</h2>
-        <button onclick="alert('Музыка временно недоступна')">Музыка: ВКЛ</button>
-        <button onclick="location.reload()">Выйти из аккаунта</button>
-        <button onclick="show('scr-menu')">НАЗАД</button>
+    <div id="scr-top" class="screen">
+        <h2>МИРОВОЙ ТОП</h2>
+        <table>
+            <thead><tr><th>#</th><th>Игрок</th><th>Очки</th></tr></thead>
+            <tbody id="top-list"></tbody>
+        </table>
+        <button onclick="window.showScreen('scr-menu')">НАЗАД</button>
     </div>
 
     <div id="scr-game" class="screen">
-        <div style="display:flex; justify-content:space-between; width:100%; padding:10px;">
-            <span>Очки: <b id="score">0</b></span>
-            <button onclick="location.reload()" style="width:auto; margin:0; padding:5px; background:red; border:none;">🛑</button>
+        <div style="display:flex; justify-content:space-between; width:100%; padding:5px;">
+            <span>Счет: <b id="score">0</b></span>
+            <button onclick="location.reload()" style="width:auto; margin:0; padding:5px; background:red;">🛑</button>
         </div>
         <canvas id="canvas" width="400" height="400"></canvas>
         <div class="controls">
-            <div></div><div class="c-btn" onclick="setD('up')">▲</div><div></div>
-            <div class="c-btn" onclick="setD('left')">◀</div><div class="c-btn" onclick="setD('down')">▼</div><div class="c-btn" onclick="setD('right')">▶</div>
+            <div></div><div class="c-btn" id="up-btn">▲</div><div></div>
+            <div class="c-btn" id="left-btn">◀</div><div class="c-btn" id="down-btn">▼</div><div class="c-btn" id="right-btn">▶</div>
         </div>
     </div>
 </div>
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-    import { getDatabase, ref, push, set, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
-    // ТВОЙ КОНФИГ ИЗ FIREBASE
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
     const firebaseConfig = {
         apiKey: "AIzaSyDy-KwcsKCk1rSQtSpB6dCry-F1v8mxRNg",
         authDomain: "pnake-5a242.firebaseapp.com",
@@ -99,94 +81,85 @@
     const db = getDatabase(app);
 
     let currentUser = null;
-    let gameInt;
+    let gameInt = null;
     let state = { s: [], d: 'right', nD: 'right', f: {x:5, y:5}, sc: 0 };
     const cvs = document.getElementById('canvas');
     const ctx = cvs.getContext('2d');
 
-    // МАГАЗИН ДАННЫЕ
-    const shopItems = {
-        colors: [{id:'#ff007f', n:'Розовый', p:0}, {id:'#fff', n:'Белый', p:50}, {id:'#00ff00', n:'Зеленый', p:100}],
-        food: [{id:'red', n:'Яблоко', p:0}, {id:'#fc5a8d', n:'Клубника', p:50}]
-    };
-
-    // ФУНКЦИИ ЭКРАНОВ
-    window.show = (id) => {
+    window.showScreen = (id) => {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(id === 'scr-menu') updateUI();
+        if(id === 'scr-menu') updateMenuUI();
     };
 
-    // АВТОРИЗАЦИЯ (Локальная + сохранение ника)
-    window.handleAuth = (type) => {
-        const l = document.getElementById('login').value.trim();
-        const p = document.getElementById('pass').value.trim();
-        if(!l || !p) return alert("Заполни поля");
-        
+    function updateMenuUI() {
         let users = JSON.parse(localStorage.getItem('pnake_users') || '{}');
-        if(type === 'reg') {
-            if(users[l]) return alert("Ник занят");
-            users[l] = { pass:p, coins:10, inv:{colors:['#ff007f'], food:['red']}, sel:{color:'#ff007f', food:'red'} };
-            localStorage.setItem('pnake_users', JSON.stringify(users));
-            alert("Успех! Теперь войди.");
-        } else {
-            if(users[l] && users[l].pass === p) {
-                currentUser = l;
-                show('scr-menu');
-            } else alert("Ошибка входа");
+        let u = users[currentUser];
+        if(u) {
+            document.getElementById('u-coins').innerText = u.coins;
+            document.getElementById('u-name').innerText = currentUser;
         }
-    };
-
-    function updateUI() {
-        const u = JSON.parse(localStorage.getItem('pnake_users'))[currentUser];
-        document.getElementById('u-coins').innerText = u.coins;
-        document.getElementById('s-coins').innerText = u.coins;
-        document.getElementById('u-name').innerText = currentUser;
     }
 
-    // МАГАЗИН ЛОГИКА
-    window.renderShop = (cat) => {
-        let users = JSON.parse(localStorage.getItem('pnake_users'));
-        let u = users[currentUser];
-        let html = '';
-        shopItems[cat].forEach(item => {
-            const owned = u.inv[cat].includes(item.id);
-            const sel = u.sel[cat === 'colors' ? 'color' : 'food'] === item.id;
-            let btn = sel ? '<span>Выбрано</span>' : (owned ? `<button onclick="selectItem('${cat}','${item.id}')">Взять</button>` : `<button onclick="buyItem('${cat}','${item.id}',${item.p})">${item.p} 💰</button>`);
-            html += `<div class="shop-item"><span>${item.n}</span> ${btn}</div>`;
-        });
-        document.getElementById('shop-list').innerHTML = html;
-    };
-
-    window.buyItem = (cat, id, p) => {
-        let users = JSON.parse(localStorage.getItem('pnake_users'));
-        if(users[currentUser].coins >= p) {
-            users[currentUser].coins -= p;
-            users[currentUser].inv[cat].push(id);
-            localStorage.setItem('pnake_users', JSON.stringify(users));
-            renderShop(cat); updateUI();
-        } else alert("Мало змет");
-    };
-
-    window.selectItem = (cat, id) => {
-        let users = JSON.parse(localStorage.getItem('pnake_users'));
-        users[currentUser].sel[cat === 'colors' ? 'color' : 'food'] = id;
+    // Регистрация
+    document.getElementById('auth-reg-btn').onclick = () => {
+        const l = document.getElementById('login').value.trim();
+        const p = document.getElementById('pass').value.trim();
+        if(!l || !p) return alert("Заполни поля!");
+        let users = JSON.parse(localStorage.getItem('pnake_users') || '{}');
+        if(users[l]) return alert("Ник занят");
+        users[l] = { pass: p, coins: 0 };
         localStorage.setItem('pnake_users', JSON.stringify(users));
-        renderShop(cat);
+        alert("Успешно!");
     };
 
-    // ИГРА
-    window.startGame = () => {
+    // Вход
+    document.getElementById('auth-login-btn').onclick = () => {
+        const l = document.getElementById('login').value.trim();
+        const p = document.getElementById('pass').value.trim();
+        let users = JSON.parse(localStorage.getItem('pnake_users') || '{}');
+        if(users[l] && users[l].pass === p) {
+            currentUser = l;
+            window.showScreen('scr-menu');
+        } else alert("Ошибка входа!");
+    };
+
+    // ТОП игроков
+    document.getElementById('menu-top-btn').onclick = () => {
+        window.showScreen('scr-top');
+        const list = document.getElementById('top-list');
+        list.innerHTML = "<tr><td colspan='3'>Загрузка...</td></tr>";
+
+        try {
+            const q = query(ref(db, 'leaderboard'), orderByChild('score'), limitToLast(10));
+            onValue(q, (snap) => {
+                let data = [];
+                snap.forEach(c => { data.push(c.val()); });
+                data.sort((a,b) => b.score - a.score);
+                list.innerHTML = data.length ? data.map((v, i) => `<tr><td>${i+1}</td><td>${v.name}</td><td>${v.score}</td></tr>`).join('') : "<tr><td colspan='3'>Нет рекордов</td></tr>";
+            }, { onlyOnce: true });
+        } catch(e) { list.innerHTML = "<tr><td colspan='3'>Ошибка связи</td></tr>"; }
+    };
+
+    // Игра
+    document.getElementById('menu-start-btn').onclick = () => {
+        window.showScreen('scr-game');
         state = { s: [{x:10, y:10}], d: 'right', nD: 'right', f: {x:5, y:5}, sc: 0 };
-        gameInt = setInterval(gameLoop, 130);
+        if(gameInt) clearInterval(gameInt);
+        gameInt = setInterval(loop, 140);
     };
 
-    window.setD = (d) => {
+    const setD = (d) => {
         const opp = {up:'down', down:'up', left:'right', right:'left'};
         if(d !== opp[state.d]) state.nD = d;
     };
 
-    function gameLoop() {
+    document.getElementById('up-btn').onclick = () => setD('up');
+    document.getElementById('down-btn').onclick = () => setD('down');
+    document.getElementById('left-btn').onclick = () => setD('left');
+    document.getElementById('right-btn').onclick = () => setD('right');
+
+    function loop() {
         state.d = state.nD;
         let h = {...state.s[0]};
         if(state.d === 'up') h.y--; if(state.d === 'down') h.y++;
@@ -194,28 +167,25 @@
 
         if(h.x<0 || h.x>=20 || h.y<0 || h.y>=20 || state.s.find(p=>p.x==h.x && p.y==h.y)) {
             clearInterval(gameInt);
-            alert("Конец! + " + state.sc + " змет");
-            let users = JSON.parse(localStorage.getItem('pnake_users'));
+            alert("Конец! Счет: " + state.sc);
+            let users = JSON.parse(localStorage.getItem('pnake_users') || '{}');
             users[currentUser].coins += state.sc;
             localStorage.setItem('pnake_users', JSON.stringify(users));
             push(ref(db, 'leaderboard'), { name: currentUser, score: state.sc });
-            show('scr-menu');
+            window.showScreen('scr-menu');
             return;
         }
 
         state.s.unshift(h);
         if(h.x==state.f.x && h.y==state.f.y) {
-            state.sc++; document.getElementById('score').innerText = state.sc;
+            state.sc++;
+            document.getElementById('score').innerText = state.sc;
             state.f = {x:Math.floor(Math.random()*20), y:Math.floor(Math.random()*20)};
         } else state.s.pop();
-        
-        // Рендер
+
         ctx.clearRect(0,0,400,400);
-        let u = JSON.parse(localStorage.getItem('pnake_users'))[currentUser];
-        ctx.fillStyle = u.sel.food;
-        ctx.beginPath(); ctx.arc(state.f.x*20+10, state.f.y*20+10, 8, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = u.sel.color;
-        state.s.forEach(p => ctx.fillRect(p.x*20+1, p.y*20+1, 18, 18));
+        ctx.fillStyle = "red"; ctx.fillRect(state.f.x*20+2, state.f.y*20+2, 16, 16);
+        ctx.fillStyle = "#ff007f"; state.s.forEach(p => ctx.fillRect(p.x*20+1, p.y*20+1, 18, 18));
     }
 </script>
 </body>
