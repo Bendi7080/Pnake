@@ -3,68 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pnake Online</title>
+    <title>Pnake - Full Game</title>
     <style>
-        :root { --neon: #ff007f; --bg: #1a1a2e; }
+        :root { --neon: #ff007f; --bg: #1a1a2e; --panel: #16213e; }
         * { touch-action: manipulation; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; display: flex; justify-content: center; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; justify-content: center; }
         #app { width: 100%; max-width: 500px; height: 100vh; position: relative; display: flex; flex-direction: column; border: 2px solid var(--neon); }
-        .screen { display: none; flex-direction: column; align-items: center; padding: 20px; flex-grow: 1; overflow-y: auto; }
+        
+        .screen { display: none; flex-direction: column; align-items: center; padding: 20px; flex-grow: 1; overflow-y: auto; width: 100%; }
         .active { display: flex; }
-        h1 { color: var(--neon); text-shadow: 0 0 10px var(--neon); font-size: 3.5rem; margin: 20px 0; }
-        button { background: #16213e; color: white; border: 2px solid var(--neon); padding: 15px; margin: 10px; width: 80%; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
-        input { padding: 15px; margin: 10px; width: 80%; background: #0f3460; border: 1px solid var(--neon); color: white; border-radius: 8px; font-size: 1rem; }
-        canvas { background: black; width: 90vw; height: 90vw; max-width: 360px; max-height: 360px; border: 3px solid #000; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+        
+        h1 { color: var(--neon); text-shadow: 0 0 15px var(--neon); font-size: 3.5rem; margin: 20px 0; }
+        .currency { color: #ffd700; font-size: 1.3rem; font-weight: bold; margin: 10px 0; }
+        
+        button { background: var(--panel); color: white; border: 2px solid var(--neon); padding: 15px; margin: 8px; width: 85%; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.95); background: var(--neon); }
+        input { padding: 15px; margin: 10px; width: 85%; background: #0f3460; border: 1px solid var(--neon); color: white; border-radius: 8px; font-size: 1rem; }
+        
+        canvas { background: black; width: 90vw; height: 90vw; max-width: 360px; max-height: 360px; border: 4px solid #000; }
+        
+        /* Джойстик */
         .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 90%; margin-top: 15px; }
-        .c-btn { background: rgba(255,0,127,0.1); border: 2px solid var(--neon); height: 75px; display: flex; justify-content: center; align-items: center; font-size: 2rem; border-radius: 15px; user-select: none; }
-        .c-btn:active { background: var(--neon); }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: rgba(255,255,255,0.05); }
-        th, td { border: 1px solid var(--neon); padding: 10px; text-align: center; }
-        th { background: var(--neon); color: white; }
+        .c-btn { background: rgba(255,0,127,0.1); border: 2px solid var(--neon); height: 70px; display: flex; justify-content: center; align-items: center; font-size: 2rem; border-radius: 15px; }
+        
+        /* Магазин */
+        .shop-item { width: 100%; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid var(--neon); }
+        .shop-item span { font-size: 0.9rem; }
+        .shop-item button { width: auto; padding: 5px 15px; margin: 0; font-size: 0.8rem; }
     </style>
 </head>
 <body>
-
 <div id="app">
     <div id="scr-auth" class="screen active">
         <h1>PNAKE</h1>
-        <input type="text" id="login" placeholder="Твой ник (на англ.)" maxlength="12">
-        <button id="btn-play">ИГРАТЬ</button>
-        <button id="btn-show-top" style="font-size: 0.9rem; border-color: #555;">Мировой ТОП</button>
+        <input type="text" id="login" placeholder="Логин">
+        <input type="password" id="pass" placeholder="Пароль">
+        <button onclick="handleAuth('login')">ВОЙТИ</button>
+        <button onclick="handleAuth('reg')" style="border-color: #555; font-size: 0.9rem;">Регистрация</button>
+    </div>
+
+    <div id="scr-menu" class="screen">
+        <div class="currency">💰 Зменеты: <span id="u-coins">0</span></div>
+        <h2 id="u-name">Игрок</h2>
+        <button onclick="show('scr-game'); startGame();" style="height: 100px; background: var(--neon);">ИГРАТЬ</button>
+        <button onclick="show('scr-shop'); renderShop('colors');">МАГАЗИН</button>
+        <button onclick="show('scr-top'); loadTop();">РЕКОРДЫ</button>
+        <button onclick="show('scr-settings')">⚙️ НАСТРОЙКИ</button>
+    </div>
+
+    <div id="scr-shop" class="screen">
+        <div class="currency">Баланс: <span id="s-coins">0</span></div>
+        <div style="display:flex; gap:5px; width:100%;">
+            <button onclick="renderShop('colors')" style="font-size:0.7rem; padding:10px;">ЦВЕТА</button>
+            <button onclick="renderShop('food')" style="font-size:0.7rem; padding:10px;">ЕДА</button>
+        </div>
+        <div id="shop-list" style="width:100%; margin-top:15px;"></div>
+        <button onclick="show('scr-menu')">НАЗАД</button>
+    </div>
+
+    <div id="scr-settings" class="screen">
+        <h2>Настройки</h2>
+        <button onclick="alert('Музыка временно недоступна')">Музыка: ВКЛ</button>
+        <button onclick="location.reload()">Выйти из аккаунта</button>
+        <button onclick="show('scr-menu')">НАЗАД</button>
     </div>
 
     <div id="scr-game" class="screen">
-        <div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px; font-size: 1.2rem;">
+        <div style="display:flex; justify-content:space-between; width:100%; padding:10px;">
             <span>Очки: <b id="score">0</b></span>
-            <span id="game-user" style="color:var(--neon)"></span>
+            <button onclick="location.reload()" style="width:auto; margin:0; padding:5px; background:red; border:none;">🛑</button>
         </div>
         <canvas id="canvas" width="400" height="400"></canvas>
         <div class="controls">
-            <div></div><div class="c-btn" id="ctrl-up">▲</div><div></div>
-            <div class="c-btn" id="ctrl-left">◀</div><div class="c-btn" id="ctrl-down">▼</div><div class="c-btn" id="ctrl-right">▶</div>
+            <div></div><div class="c-btn" onclick="setD('up')">▲</div><div></div>
+            <div class="c-btn" onclick="setD('left')">◀</div><div class="c-btn" onclick="setD('down')">▼</div><div class="c-btn" onclick="setD('right')">▶</div>
         </div>
     </div>
-
-    <div id="scr-top" class="screen">
-        <h2>ТОП-10 МИРА</h2>
-        <table>
-            <thead><tr><th>#</th><th>Игрок</th><th>Очки</th></tr></thead>
-            <tbody id="top-list"></tbody>
-        </table>
-        <button onclick="location.reload()">НАЗАД</button>
-    </div>
 </div>
-
 <script type="module">
-    // --- ПОДКЛЮЧЕНИЕ FIREBASE ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+    import { getDatabase, ref, push, set, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
-    // ВСТАВЬ СВОИ ДАННЫЕ ТУТ:
+    // ТВОЙ КОНФИГ ИЗ FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyDy-KwcsKCk1rSQtSpB6dCry-F1v8mxRNg",
         authDomain: "pnake-5a242.firebaseapp.com",
-        databaseURL: "https://pnake-5a242-default-rtdb.firebaseio.com", 
+        databaseURL: "https://pnake-5a242-default-rtdb.firebaseio.com",
         projectId: "pnake-5a242",
         storageBucket: "pnake-5a242.firebasestorage.app",
         messagingSenderId: "961270080510",
@@ -74,120 +98,125 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // --- ЛОГИКА ИГРЫ ---
-    let user = "";
+    let currentUser = null;
     let gameInt;
-    let state = { s: [], d: 'r', nD: 'r', f: {x:10, y:10}, sc: 0 };
+    let state = { s: [], d: 'right', nD: 'right', f: {x:5, y:5}, sc: 0 };
     const cvs = document.getElementById('canvas');
     const ctx = cvs.getContext('2d');
 
-    function show(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-    }
-
-    // Старт игры
-    document.getElementById('btn-play').onclick = () => {
-        user = document.getElementById('login').value.trim() || "Аноним";
-        document.getElementById('game-user').innerText = user;
-        show('scr-game');
-        resetGame();
+    // МАГАЗИН ДАННЫЕ
+    const shopItems = {
+        colors: [{id:'#ff007f', n:'Розовый', p:0}, {id:'#fff', n:'Белый', p:50}, {id:'#00ff00', n:'Зеленый', p:100}],
+        food: [{id:'red', n:'Яблоко', p:0}, {id:'#fc5a8d', n:'Клубника', p:50}]
     };
 
-    function resetGame() {
-        state = { s: [{x:10, y:10}, {x:9, y:10}], d: 'right', nD: 'right', f: {x:5, y:5}, sc: 0 };
-        document.getElementById('score').innerText = "0";
-        if(gameInt) clearInterval(gameInt);
-        gameInt = setInterval(step, 140);
+    // ФУНКЦИИ ЭКРАНОВ
+    window.show = (id) => {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(id === 'scr-menu') updateUI();
+    };
+
+    // АВТОРИЗАЦИЯ (Локальная + сохранение ника)
+    window.handleAuth = (type) => {
+        const l = document.getElementById('login').value.trim();
+        const p = document.getElementById('pass').value.trim();
+        if(!l || !p) return alert("Заполни поля");
+        
+        let users = JSON.parse(localStorage.getItem('pnake_users') || '{}');
+        if(type === 'reg') {
+            if(users[l]) return alert("Ник занят");
+            users[l] = { pass:p, coins:10, inv:{colors:['#ff007f'], food:['red']}, sel:{color:'#ff007f', food:'red'} };
+            localStorage.setItem('pnake_users', JSON.stringify(users));
+            alert("Успех! Теперь войди.");
+        } else {
+            if(users[l] && users[l].pass === p) {
+                currentUser = l;
+                show('scr-menu');
+            } else alert("Ошибка входа");
+        }
+    };
+
+    function updateUI() {
+        const u = JSON.parse(localStorage.getItem('pnake_users'))[currentUser];
+        document.getElementById('u-coins').innerText = u.coins;
+        document.getElementById('s-coins').innerText = u.coins;
+        document.getElementById('u-name').innerText = currentUser;
     }
 
-    function step() {
-        state.d = state.nD;
-        let head = {...state.s[0]};
-        if(state.d === 'up') head.y--;
-        if(state.d === 'down') head.y++;
-        if(state.d === 'left') head.x--;
-        if(state.d === 'right') head.x++;
+    // МАГАЗИН ЛОГИКА
+    window.renderShop = (cat) => {
+        let users = JSON.parse(localStorage.getItem('pnake_users'));
+        let u = users[currentUser];
+        let html = '';
+        shopItems[cat].forEach(item => {
+            const owned = u.inv[cat].includes(item.id);
+            const sel = u.sel[cat === 'colors' ? 'color' : 'food'] === item.id;
+            let btn = sel ? '<span>Выбрано</span>' : (owned ? `<button onclick="selectItem('${cat}','${item.id}')">Взять</button>` : `<button onclick="buyItem('${cat}','${item.id}',${item.p})">${item.p} 💰</button>`);
+            html += `<div class="shop-item"><span>${item.n}</span> ${btn}</div>`;
+        });
+        document.getElementById('shop-list').innerHTML = html;
+    };
 
-        // Проверка столкновений
-        if(head.x<0 || head.x>=20 || head.y<0 || head.y>=20 || state.s.find(p=>p.x==head.x && p.y==head.y)) {
-            gameOver();
+    window.buyItem = (cat, id, p) => {
+        let users = JSON.parse(localStorage.getItem('pnake_users'));
+        if(users[currentUser].coins >= p) {
+            users[currentUser].coins -= p;
+            users[currentUser].inv[cat].push(id);
+            localStorage.setItem('pnake_users', JSON.stringify(users));
+            renderShop(cat); updateUI();
+        } else alert("Мало змет");
+    };
+
+    window.selectItem = (cat, id) => {
+        let users = JSON.parse(localStorage.getItem('pnake_users'));
+        users[currentUser].sel[cat === 'colors' ? 'color' : 'food'] = id;
+        localStorage.setItem('pnake_users', JSON.stringify(users));
+        renderShop(cat);
+    };
+
+    // ИГРА
+    window.startGame = () => {
+        state = { s: [{x:10, y:10}], d: 'right', nD: 'right', f: {x:5, y:5}, sc: 0 };
+        gameInt = setInterval(gameLoop, 130);
+    };
+
+    window.setD = (d) => {
+        const opp = {up:'down', down:'up', left:'right', right:'left'};
+        if(d !== opp[state.d]) state.nD = d;
+    };
+
+    function gameLoop() {
+        state.d = state.nD;
+        let h = {...state.s[0]};
+        if(state.d === 'up') h.y--; if(state.d === 'down') h.y++;
+        if(state.d === 'left') h.x--; if(state.d === 'right') h.x++;
+
+        if(h.x<0 || h.x>=20 || h.y<0 || h.y>=20 || state.s.find(p=>p.x==h.x && p.y==h.y)) {
+            clearInterval(gameInt);
+            alert("Конец! + " + state.sc + " змет");
+            let users = JSON.parse(localStorage.getItem('pnake_users'));
+            users[currentUser].coins += state.sc;
+            localStorage.setItem('pnake_users', JSON.stringify(users));
+            push(ref(db, 'leaderboard'), { name: currentUser, score: state.sc });
+            show('scr-menu');
             return;
         }
 
-        state.s.unshift(head);
-        if(head.x == state.f.x && head.y == state.f.y) {
-            state.sc++;
-            document.getElementById('score').innerText = state.sc;
-            spawnFood();
-        } else {
-            state.s.pop();
-        }
-        draw();
-    }
-
-    function spawnFood() {
-        state.f = { x: Math.floor(Math.random()*20), y: Math.floor(Math.random()*20) };
-    }
-
-    function draw() {
+        state.s.unshift(h);
+        if(h.x==state.f.x && h.y==state.f.y) {
+            state.sc++; document.getElementById('score').innerText = state.sc;
+            state.f = {x:Math.floor(Math.random()*20), y:Math.floor(Math.random()*20)};
+        } else state.s.pop();
+        
+        // Рендер
         ctx.clearRect(0,0,400,400);
-        // Еда
-        ctx.fillStyle = "red";
-        ctx.beginPath();
-        ctx.arc(state.f.x*20+10, state.f.y*20+10, 8, 0, Math.PI*2);
-        ctx.fill();
-        // Змейка
-        ctx.fillStyle = "#ff007f";
-        state.s.forEach((p, i) => {
-            ctx.shadowBlur = i === 0 ? 10 : 0;
-            ctx.shadowColor = "#ff007f";
-            ctx.fillRect(p.x*20+1, p.y*20+1, 18, 18);
-        });
+        let u = JSON.parse(localStorage.getItem('pnake_users'))[currentUser];
+        ctx.fillStyle = u.sel.food;
+        ctx.beginPath(); ctx.arc(state.f.x*20+10, state.f.y*20+10, 8, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = u.sel.color;
+        state.s.forEach(p => ctx.fillRect(p.x*20+1, p.y*20+1, 18, 18));
     }
-
-    function gameOver() {
-        clearInterval(gameInt);
-        alert("Конец игры! Твой счет: " + state.sc);
-        if(state.sc > 0) {
-            push(ref(db, 'leaderboard'), { name: user, score: state.sc, t: Date.now() });
-        }
-        location.reload();
-    }
-
-    // Управление
-    const setD = (dir) => {
-        const opp = {up:'down', down:'up', left:'right', right:'left'};
-        if(dir !== opp[state.d]) state.nD = dir;
-    };
-
-    document.getElementById('ctrl-up').onclick = () => setD('up');
-    document.getElementById('ctrl-down').onclick = () => setD('down');
-    document.getElementById('ctrl-left').onclick = () => setD('left');
-    document.getElementById('ctrl-right').onclick = () => setD('right');
-
-    window.onkeydown = (e) => {
-        if(e.key == "ArrowUp") setD('up');
-        if(e.key == "ArrowDown") setD('down');
-        if(e.key == "ArrowLeft") setD('left');
-        if(e.key == "ArrowRight") setD('right');
-    };
-
-    // Таблица лидеров
-    document.getElementById('btn-show-top').onclick = () => {
-        show('scr-top');
-        const q = query(ref(db, 'leaderboard'), orderByChild('score'), limitToLast(10));
-        onValue(q, (s) => {
-            let list = [];
-            s.forEach(c => { list.push(childData(c)); });
-            list.sort((a,b) => b.score - a.score);
-            document.getElementById('top-list').innerHTML = list.map((v, i) => 
-                `<tr><td>${i+1}</td><td>${v.name}</td><td>${v.score}</td></tr>`
-            ).join('');
-        });
-    };
-    function childData(c) { return c.val(); }
-
 </script>
 </body>
 </html>
