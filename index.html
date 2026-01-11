@@ -3,308 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pnake - Fullscreen Edition</title>
+    <title>Pnake Online</title>
     <style>
-        :root {
-            --neon-pink: #ff007f;
-            --dark-bg: #1a1a2e;
-            --btn-bg: #16213e;
-            --text-gold: #ffd700;
-        }
-
-        * { touch-action: manipulation; box-sizing: border-box; }
-
-        body {
-            margin: 0; padding: 0;
-            background-color: var(--dark-bg);
-            color: white;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; overflow: hidden;
-        }
-
-        #app-container {
-            width: 100%; max-width: 500px;
-            height: 100%; max-height: 900px;
-            background: var(--dark-bg);
-            position: relative;
-            display: flex; flex-direction: column;
-            border: 2px solid var(--neon-pink);
-        }
-
-        .screen {
-            display: none; flex-direction: column;
-            align-items: center; padding: 20px;
-            flex-grow: 1; width: 100%;
-        }
-
+        :root { --neon: #ff007f; --bg: #1a1a2e; }
+        * { touch-action: manipulation; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; display: flex; justify-content: center; }
+        #app { width: 100%; max-width: 500px; height: 100vh; position: relative; display: flex; flex-direction: column; border: 2px solid var(--neon); }
+        .screen { display: none; flex-direction: column; align-items: center; padding: 20px; flex-grow: 1; overflow-y: auto; }
         .active { display: flex; }
-
-        h1 { color: var(--neon-pink); text-shadow: 0 0 15px var(--neon-pink); font-size: 4rem; margin: 40px 0; }
-
-        button {
-            background: var(--btn-bg); color: white;
-            border: 2px solid var(--neon-pink);
-            padding: 15px; margin: 10px;
-            cursor: pointer; width: 80%;
-            font-size: 1.2rem; border-radius: 10px;
-            transition: 0.2s;
-        }
-
-        input {
-            padding: 15px; margin: 10px; width: 80%;
-            background: #0f3460; border: 1px solid var(--neon-pink);
-            color: white; border-radius: 8px;
-        }
-
-        .settings-icon {
-            position: absolute; top: 15px; right: 15px;
-            font-size: 30px; cursor: pointer; z-index: 100;
-        }
-
-        /* ИГРОВАЯ ЗОНА */
-        #game-wrapper {
-            position: relative; width: 100%;
-            display: flex; flex-direction: column; align-items: center;
-        }
-
-        canvas {
-            background: black; border: 5px solid black;
-            width: 90vw; height: 90vw; max-width: 380px; max-height: 380px;
-        }
-
-        /* УПРАВЛЕНИЕ (ДЖОЙСТИК) */
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, 80px);
-            gap: 10px; width: 90%; margin-top: 20px;
-        }
-
-        .ctrl-btn {
-            background: rgba(255, 0, 127, 0.2);
-            border: 2px solid var(--neon-pink);
-            border-radius: 15px;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 2rem; color: white;
-            user-select: none;
-        }
-
-        .ctrl-btn:active { background: var(--neon-pink); }
-
-        .shop-item {
-            width: 100%; display: flex; justify-content: space-between;
-            align-items: center; background: rgba(255,255,255,0.05);
-            padding: 12px; margin: 5px 0; border-radius: 5px;
-        }
+        h1 { color: var(--neon); text-shadow: 0 0 10px var(--neon); font-size: 3.5rem; margin: 20px 0; }
+        button { background: #16213e; color: white; border: 2px solid var(--neon); padding: 15px; margin: 10px; width: 80%; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+        input { padding: 15px; margin: 10px; width: 80%; background: #0f3460; border: 1px solid var(--neon); color: white; border-radius: 8px; font-size: 1rem; }
+        canvas { background: black; width: 90vw; height: 90vw; max-width: 360px; max-height: 360px; border: 3px solid #000; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 90%; margin-top: 15px; }
+        .c-btn { background: rgba(255,0,127,0.1); border: 2px solid var(--neon); height: 75px; display: flex; justify-content: center; align-items: center; font-size: 2rem; border-radius: 15px; user-select: none; }
+        .c-btn:active { background: var(--neon); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: rgba(255,255,255,0.05); }
+        th, td { border: 1px solid var(--neon); padding: 10px; text-align: center; }
+        th { background: var(--neon); color: white; }
     </style>
 </head>
 <body>
 
-<div id="app-container">
-    <div id="settings-trigger" class="settings-icon" onclick="showScreen('screen-settings')">⚙️</div>
-
-    <div id="screen-auth" class="screen active">
+<div id="app">
+    <div id="scr-auth" class="screen active">
         <h1>PNAKE</h1>
-        <input type="text" id="auth-login" placeholder="Логин">
-        <input type="password" id="auth-pass" placeholder="Пароль">
-        <button onclick="handleLogin()">ВОЙТИ</button>
-        <button onclick="handleRegister()" style="border-color: #555; font-size: 0.9rem;">Регистрация</button>
+        <input type="text" id="login" placeholder="Твой ник (на англ.)" maxlength="12">
+        <button id="btn-play">ИГРАТЬ</button>
+        <button id="btn-show-top" style="font-size: 0.9rem; border-color: #555;">Мировой ТОП</button>
     </div>
 
-    <div id="screen-menu" class="screen">
-        <div style="color: gold; font-size: 1.5rem; margin-top: 20px;">💰 <span id="user-coins">0</span></div>
-        <h2 id="welcome-text">Приятной игры!</h2>
-        <button onclick="startGame()" style="height: 120px; font-weight: bold; background: var(--neon-pink);">ИГРАТЬ</button>
-        <button onclick="showScreen('screen-shop')">МАГАЗИН</button>
-        <button onclick="showScreen('screen-auth')" style="margin-top: auto; opacity: 0.6;">Выход</button>
-    </div>
-
-    <div id="screen-settings" class="screen">
-        <h2>Настройки</h2>
-        <button onclick="toggleSetting('music')">Музыка: <span id="set-music">ВКЛ</span></button>
-        <button onclick="toggleTheme()">Режим: <span id="set-theme">НОЧЬ</span></button>
-        <button onclick="showScreen('screen-menu')">Назад</button>
-    </div>
-
-    <div id="screen-shop" class="screen">
-        <h3>Магазин</h3>
-        <div style="display: flex; gap: 5px; margin-bottom: 15px;">
-            <button onclick="renderShop('colors')" style="font-size: 0.7rem; padding: 10px;">ЦВЕТА</button>
-            <button onclick="renderShop('food')" style="font-size: 0.7rem; padding: 10px;">ЕДА</button>
-            <button onclick="renderShop('shapes')" style="font-size: 0.7rem; padding: 10px;">ФОРМЫ</button>
+    <div id="scr-game" class="screen">
+        <div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px; font-size: 1.2rem;">
+            <span>Очки: <b id="score">0</b></span>
+            <span id="game-user" style="color:var(--neon)"></span>
         </div>
-        <div id="shop-content" style="width: 100%; overflow-y: auto; max-height: 300px;"></div>
-        <button onclick="showScreen('screen-menu')" style="margin-top: auto;">Назад</button>
-    </div>
-
-    <div id="screen-game" class="screen" style="padding: 10px;">
-        <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-size: 1.5rem;">🍎: <span id="game-score">0</span></span>
-            <button onclick="pauseGame()" style="width: 60px; margin: 0; background: red; border: none;">🛑</button>
-        </div>
-        
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-
+        <canvas id="canvas" width="400" height="400"></canvas>
         <div class="controls">
-            <div></div><div class="ctrl-btn" onclick="setDir('up')">▲</div><div></div>
-            <div class="ctrl-btn" onclick="setDir('left')">◀</div>
-            <div class="ctrl-btn" onclick="setDir('down')">▼</div>
-            <div class="ctrl-btn" onclick="setDir('right')">▶</div>
+            <div></div><div class="c-btn" id="ctrl-up">▲</div><div></div>
+            <div class="c-btn" id="ctrl-left">◀</div><div class="c-btn" id="ctrl-down">▼</div><div class="c-btn" id="ctrl-right">▶</div>
         </div>
+    </div>
+
+    <div id="scr-top" class="screen">
+        <h2>ТОП-10 МИРА</h2>
+        <table>
+            <thead><tr><th>#</th><th>Игрок</th><th>Очки</th></tr></thead>
+            <tbody id="top-list"></tbody>
+        </table>
+        <button onclick="location.reload()">НАЗАД</button>
     </div>
 </div>
 
-<script>
-    let users = JSON.parse(localStorage.getItem('pnake_users') || '{}');
-    let currentUser = null;
-    let gameInterval = null;
-    let gameState = { snake: [], dir: 'right', nextDir: 'right', food: {x: 0, y: 0}, score: 0 };
+<script type="module">
+    // --- ПОДКЛЮЧЕНИЕ FIREBASE ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
-    const shopData = {
-        colors: [{id: 'pink', p: 0, n: 'Розовый'}, {id: 'white', p: 50, n: 'Белый'}, {id: 'black', p: 100, n: 'Черный'}],
-        food: [{id: 'apple', p: 0, n: 'Яблоко'}, {id: 'strawberry', p: 50, n: 'Клубника'}, {id: 'cupcake', p: 100, n: 'Кекс'}],
-        shapes: [{id: 'square', p: 0, n: 'Квадрат'}, {id: 'circle', p: 100, n: 'Круг'}, {id: 'connected', p: 200, n: 'Слитная'}]
+    // ВСТАВЬ СВОИ ДАННЫЕ ТУТ:
+    const firebaseConfig = {
+        apiKey: "AIzaSyDy-KwcsKCk1rSQtSpB6dCry-F1v8mxRNg",
+        authDomain: "pnake-5a242.firebaseapp.com",
+        databaseURL: "https://pnake-5a242-default-rtdb.firebaseio.com", 
+        projectId: "pnake-5a242",
+        storageBucket: "pnake-5a242.firebasestorage.app",
+        messagingSenderId: "961270080510",
+        appId: "1:961270080510:web:440ca3fe3f8cdba78396af"
     };
 
-    function showScreen(id) {
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // --- ЛОГИКА ИГРЫ ---
+    let user = "";
+    let gameInt;
+    let state = { s: [], d: 'r', nD: 'r', f: {x:10, y:10}, sc: 0 };
+    const cvs = document.getElementById('canvas');
+    const ctx = cvs.getContext('2d');
+
+    function show(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        document.getElementById('settings-trigger').style.display = (id === 'screen-menu') ? 'block' : 'none';
-        if(id === 'screen-menu') updateUI();
     }
 
-    function handleRegister() {
-        const l = document.getElementById('auth-login').value;
-        const p = document.getElementById('auth-pass').value;
-        if(!l || !p) return alert('Введите данные!');
-        if(users[l]) return alert('Логин занят!');
-        users[l] = { pass: p, coins: 0, inv: {colors:['pink'], food:['apple'], shapes:['square']}, sel: {color:'pink', food:'apple', shape:'square'}, set: {music:true, theme:'night'}};
-        localStorage.setItem('pnake_users', JSON.stringify(users));
-        alert('Зарегистрировано!');
+    // Старт игры
+    document.getElementById('btn-play').onclick = () => {
+        user = document.getElementById('login').value.trim() || "Аноним";
+        document.getElementById('game-user').innerText = user;
+        show('scr-game');
+        resetGame();
+    };
+
+    function resetGame() {
+        state = { s: [{x:10, y:10}, {x:9, y:10}], d: 'right', nD: 'right', f: {x:5, y:5}, sc: 0 };
+        document.getElementById('score').innerText = "0";
+        if(gameInt) clearInterval(gameInt);
+        gameInt = setInterval(step, 140);
     }
 
-    function handleLogin() {
-        const l = document.getElementById('auth-login').value;
-        const p = document.getElementById('auth-pass').value;
-        if(users[l] && users[l].pass === p) { currentUser = l; showScreen('screen-menu'); }
-        else alert('Неверно!');
-    }
+    function step() {
+        state.d = state.nD;
+        let head = {...state.s[0]};
+        if(state.d === 'up') head.y--;
+        if(state.d === 'down') head.y++;
+        if(state.d === 'left') head.x--;
+        if(state.d === 'right') head.x++;
 
-    function updateUI() {
-        const u = users[currentUser];
-        document.getElementById('user-coins').innerText = u.coins;
-        document.getElementById('set-theme').innerText = u.set.theme === 'night' ? "НОЧЬ" : "ДЕНЬ";
-    }
-
-    function renderShop(cat) {
-        const u = users[currentUser];
-        let html = '';
-        shopData[cat].forEach(item => {
-            const owned = u.inv[cat].includes(item.id);
-            const selected = u.sel[cat] === item.id;
-            let btn = selected ? '<span>Выбрано</span>' : (owned ? `<button onclick="selectItem('${cat}','${item.id}')">Выбрать</button>` : `<button onclick="buyItem('${cat}','${item.id}',${item.p})">${item.p}</button>`);
-            html += `<div class="shop-item"><span>${item.n}</span> ${btn}</div>`;
-        });
-        document.getElementById('shop-content').innerHTML = html;
-    }
-
-    function buyItem(cat, id, p) {
-        if(users[currentUser].coins >= p) {
-            users[currentUser].coins -= p;
-            users[currentUser].inv[cat].push(id);
-            localStorage.setItem('pnake_users', JSON.stringify(users));
-            renderShop(cat); updateUI();
-        }
-    }
-
-    function selectItem(cat, id) {
-        users[currentUser].sel[cat] = id;
-        localStorage.setItem('pnake_users', JSON.stringify(users));
-        renderShop(cat);
-    }
-
-    function toggleTheme() {
-        users[currentUser].set.theme = users[currentUser].set.theme === 'night' ? 'day' : 'night';
-        document.getElementById('app-container').style.background = users[currentUser].set.theme === 'day' ? '#fff' : '#1a1a2e';
-        document.getElementById('app-container').style.color = users[currentUser].set.theme === 'day' ? '#000' : '#fff';
-        updateUI();
-    }
-
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-
-    function startGame() {
-        showScreen('screen-game');
-        gameState = { snake: [{x: 10, y: 10}], dir: 'right', nextDir: 'right', food: {x: 15, y: 10}, score: 0 };
-        document.getElementById('game-score').innerText = "0";
-        if(gameInterval) clearInterval(gameInterval);
-        gameInterval = setInterval(gameStep, 130);
-    }
-
-    function setDir(d) {
-        const opposites = { 'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left' };
-        if (d !== opposites[gameState.dir]) gameState.nextDir = d;
-    }
-
-    function pauseGame() {
-        clearInterval(gameInterval);
-        if(confirm("Выйти в меню?")) showScreen('screen-menu');
-        else gameInterval = setInterval(gameStep, 130);
-    }
-
-    function gameStep() {
-        gameState.dir = gameState.nextDir;
-        let head = {...gameState.snake[0]};
-        if(gameState.dir === 'up') head.y--;
-        if(gameState.dir === 'down') head.y++;
-        if(gameState.dir === 'left') head.x--;
-        if(gameState.dir === 'right') head.x++;
-
-        if(head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20 || gameState.snake.some(s => s.x === head.x && s.y === head.y)) {
-            alert("Игра окончена!");
-            users[currentUser].coins += gameState.score;
-            localStorage.setItem('pnake_users', JSON.stringify(users));
-            clearInterval(gameInterval);
-            showScreen('screen-menu');
+        // Проверка столкновений
+        if(head.x<0 || head.x>=20 || head.y<0 || head.y>=20 || state.s.find(p=>p.x==head.x && p.y==head.y)) {
+            gameOver();
             return;
         }
 
-        gameState.snake.unshift(head);
-        if(head.x === gameState.food.x && head.y === gameState.food.y) {
-            gameState.score++;
-            document.getElementById('game-score').innerText = gameState.score;
-            gameState.food = {x: Math.floor(Math.random()*20), y: Math.floor(Math.random()*20)};
-            if(gameState.score % 10 === 0) {
-                let c = ["#FFB3BA", "#BAFFC9", "#BAE1FF"][Math.floor(Math.random()*3)];
-                canvas.style.backgroundColor = c;
-            }
+        state.s.unshift(head);
+        if(head.x == state.f.x && head.y == state.f.y) {
+            state.sc++;
+            document.getElementById('score').innerText = state.sc;
+            spawnFood();
         } else {
-            gameState.snake.pop();
+            state.s.pop();
         }
         draw();
     }
 
+    function spawnFood() {
+        state.f = { x: Math.floor(Math.random()*20), y: Math.floor(Math.random()*20) };
+    }
+
     function draw() {
         ctx.clearRect(0,0,400,400);
-        const u = users[currentUser];
         // Еда
-        ctx.fillStyle = u.sel.food === 'apple' ? 'red' : (u.sel.food === 'strawberry' ? '#fc5a8d' : '#f2b552');
-        ctx.beginPath(); ctx.arc(gameState.food.x*20+10, gameState.food.y*20+10, 8, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(state.f.x*20+10, state.f.y*20+10, 8, 0, Math.PI*2);
+        ctx.fill();
         // Змейка
-        ctx.fillStyle = u.sel.color === 'pink' ? '#ff007f' : (u.sel.color === 'black' ? '#333' : '#fff');
-        gameState.snake.forEach(s => {
-            if(u.sel.shape === 'circle') { ctx.beginPath(); ctx.arc(s.x*20+10, s.y*20+10, 9, 0, Math.PI*2); ctx.fill(); }
-            else { ctx.fillRect(s.x*20+1, s.y*20+1, 18, 18); }
+        ctx.fillStyle = "#ff007f";
+        state.s.forEach((p, i) => {
+            ctx.shadowBlur = i === 0 ? 10 : 0;
+            ctx.shadowColor = "#ff007f";
+            ctx.fillRect(p.x*20+1, p.y*20+1, 18, 18);
         });
     }
 
-    window.addEventListener('keydown', e => {
-        if(e.key === 'ArrowUp') setDir('up');
-        if(e.key === 'ArrowDown') setDir('down');
-        if(e.key === 'ArrowLeft') setDir('left');
-        if(e.key === 'ArrowRight') setDir('right');
-    });
+    function gameOver() {
+        clearInterval(gameInt);
+        alert("Конец игры! Твой счет: " + state.sc);
+        if(state.sc > 0) {
+            push(ref(db, 'leaderboard'), { name: user, score: state.sc, t: Date.now() });
+        }
+        location.reload();
+    }
+
+    // Управление
+    const setD = (dir) => {
+        const opp = {up:'down', down:'up', left:'right', right:'left'};
+        if(dir !== opp[state.d]) state.nD = dir;
+    };
+
+    document.getElementById('ctrl-up').onclick = () => setD('up');
+    document.getElementById('ctrl-down').onclick = () => setD('down');
+    document.getElementById('ctrl-left').onclick = () => setD('left');
+    document.getElementById('ctrl-right').onclick = () => setD('right');
+
+    window.onkeydown = (e) => {
+        if(e.key == "ArrowUp") setD('up');
+        if(e.key == "ArrowDown") setD('down');
+        if(e.key == "ArrowLeft") setD('left');
+        if(e.key == "ArrowRight") setD('right');
+    };
+
+    // Таблица лидеров
+    document.getElementById('btn-show-top').onclick = () => {
+        show('scr-top');
+        const q = query(ref(db, 'leaderboard'), orderByChild('score'), limitToLast(10));
+        onValue(q, (s) => {
+            let list = [];
+            s.forEach(c => { list.push(childData(c)); });
+            list.sort((a,b) => b.score - a.score);
+            document.getElementById('top-list').innerHTML = list.map((v, i) => 
+                `<tr><td>${i+1}</td><td>${v.name}</td><td>${v.score}</td></tr>`
+            ).join('');
+        });
+    };
+    function childData(c) { return c.val(); }
+
 </script>
 </body>
 </html>
