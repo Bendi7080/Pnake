@@ -3,190 +3,475 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pnake - Final Version</title>
+    <title>Neon Pnake: 3 Modes</title>
     <style>
-        :root { --neon: #ff007f; --bg: #1a1a2e; --panel: #16213e; }
+        :root {
+            --neon: #0ff; /* Основной неоновый цвет */
+            --bg: #050505;
+            --panel: rgba(20, 20, 20, 0.9);
+            --text: #fff;
+        }
+
         * { touch-action: manipulation; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; display: flex; justify-content: center; }
-        #app { width: 100%; max-width: 500px; height: 100vh; position: relative; display: flex; flex-direction: column; border: 2px solid var(--neon); }
-        .screen { display: none; flex-direction: column; align-items: center; padding: 20px; flex-grow: 1; overflow-y: auto; width: 100%; }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Courier New', sans-serif; /* Шрифт как в хакерских фильмах */
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
+            transition: background 1s ease;
+        }
+
+        #app {
+            width: 100%; max-width: 500px; height: 100%;
+            position: relative; display: flex; flex-direction: column;
+            border: 4px solid var(--neon);
+            box-shadow: 0 0 20px var(--neon), inset 0 0 20px var(--neon); /* Неоновое свечение стен */
+            background: var(--bg);
+            transition: border-color 1s, box-shadow 1s;
+        }
+
+        /* Анимация тряски экрана на высоких уровнях */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .shake-screen {
+            animation: shake 0.5s;
+            animation-iteration-count: infinite;
+        }
+
+        .screen {
+            display: none; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 20px; flex-grow: 1; width: 100%; height: 100%;
+        }
+
         .active { display: flex; }
-        h1 { color: var(--neon); text-shadow: 0 0 15px var(--neon); font-size: 3rem; margin: 20px 0; }
-        .currency { color: #ffd700; font-size: 1.2rem; font-weight: bold; margin: 10px 0; }
-        button { background: var(--panel); color: white; border: 2px solid var(--neon); padding: 15px; margin: 8px; width: 85%; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
-        button:active { background: var(--neon); }
-        input { padding: 15px; margin: 10px; width: 85%; background: #0f3460; border: 1px solid var(--neon); color: white; border-radius: 8px; }
-        canvas { background: black; width: 90vw; height: 90vw; max-width: 360px; max-height: 360px; border: 2px solid var(--neon); }
-        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 90%; margin-top: 15px; }
-        .c-btn { background: rgba(255,0,127,0.1); border: 1px solid var(--neon); height: 70px; display: flex; justify-content: center; align-items: center; font-size: 2rem; border-radius: 15px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid var(--neon); padding: 8px; text-align: center; font-size: 0.9rem; }
+
+        h1 { 
+            color: var(--neon); 
+            text-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon); 
+            font-size: 3rem; margin-bottom: 10px; text-transform: uppercase;
+        }
+
+        button {
+            background: transparent; color: var(--text);
+            border: 2px solid var(--neon);
+            box-shadow: 0 0 5px var(--neon);
+            padding: 15px; margin: 8px; width: 80%;
+            cursor: pointer; font-size: 1.2rem; border-radius: 5px;
+            font-weight: bold; transition: 0.2s; text-transform: uppercase;
+        }
+        button:active { background: var(--neon); color: black; box-shadow: 0 0 15px var(--neon); }
+        button.selected { background: var(--neon); color: black; }
+
+        canvas {
+            background: rgba(0,0,0,0.8);
+            border: 2px solid var(--neon);
+            box-shadow: 0 0 10px var(--neon);
+            width: 90vw; height: 90vw;
+            max-width: 380px; max-height: 380px;
+            display: block; margin: 0 auto;
+        }
+
+        .stats {
+            display: flex; justify-content: space-between; width: 90%; 
+            margin-bottom: 10px; font-size: 1.2rem;
+            text-shadow: 0 0 5px var(--neon);
+        }
+
+        /* Джойстик */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px; width: 90%; margin-top: 20px;
+        }
+        .c-btn {
+            border: 1px solid var(--neon); border-radius: 10px;
+            height: 60px; display: flex; justify-content: center; align-items: center;
+            font-size: 2rem; color: var(--neon); user-select: none;
+            box-shadow: 0 0 5px var(--neon);
+        }
+        .c-btn:active { background: var(--neon); color: black; }
+
+        .mode-selector {
+            display: flex; gap: 5px; margin-bottom: 20px; width: 100%; justify-content: center;
+        }
+        .mode-btn {
+            font-size: 0.8rem; padding: 10px; border: 1px solid #555;
+            flex: 1; opacity: 0.6;
+        }
+        .mode-btn.active-mode {
+            opacity: 1; border-color: var(--neon); 
+            box-shadow: 0 0 10px var(--neon); color: var(--neon);
+        }
+
     </style>
 </head>
 <body>
+
 <div id="app">
-    <div id="scr-auth" class="screen active">
-        <h1>PNAKE</h1>
-        <input type="text" id="login" placeholder="Логин">
-        <input type="password" id="pass" placeholder="Пароль">
-        <button id="auth-login-btn">ВОЙТИ</button>
-        <button id="auth-reg-btn" style="border-color: #555; font-size: 0.9rem;">Регистрация</button>
+    <div id="scr-menu" class="screen active">
+        <h1>NEON SNAKE</h1>
+        <p style="margin-bottom: 20px;">Выбери режим:</p>
+        
+        <div class="mode-selector">
+            <button class="mode-btn active-mode" onclick="selectMode(0)">КЛАССИКА</button>
+            <button class="mode-btn" onclick="selectMode(1)">СТЕНЫ</button>
+            <button class="mode-btn" onclick="selectMode(2)">ПРИЗРАК</button>
+        </div>
+
+        <div id="mode-desc" style="height: 50px; text-align: center; font-size: 0.9rem; margin-bottom: 10px; color: #aaa;">
+            Обычная игра. Стены убивают.
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            Рекорд в этом режиме: <b id="best-score" style="color:var(--neon)">0</b>
+        </div>
+
+        <button onclick="startGame()">ИГРАТЬ</button>
+        <button onclick="toggleMute()" id="mute-btn">ЗВУК: ВКЛ</button>
     </div>
 
-    <div id="scr-menu" class="screen">
-        <div class="currency">💰 Зменеты: <span id="u-coins">0</span></div>
-        <h2 id="u-name">Игрок</h2>
-        <button id="menu-start-btn" style="height: 80px; background: var(--neon);">ИГРАТЬ</button>
-        <button id="menu-top-btn">РЕКОРДЫ</button>
-        <button onclick="location.reload()">ВЫХОД</button>
-    </div>
-
-    <div id="scr-top" class="screen">
-        <h2>МИРОВОЙ ТОП</h2>
-        <table>
-            <thead><tr><th>#</th><th>Игрок</th><th>Очки</th></tr></thead>
-            <tbody id="top-list"></tbody>
-        </table>
-        <button onclick="window.showScreen('scr-menu')">НАЗАД</button>
-    </div>
-
-    <div id="scr-game" class="screen">
-        <div style="display:flex; justify-content:space-between; width:100%; padding:5px;">
+    <div id="scr-game" class="screen" style="justify-content: flex-start;">
+        <div class="stats">
             <span>Счет: <b id="score">0</b></span>
-            <button onclick="location.reload()" style="width:auto; margin:0; padding:5px; background:red;">🛑</button>
+            <span>Уровень: <b id="level">1</b></span>
         </div>
+        
         <canvas id="canvas" width="400" height="400"></canvas>
+
         <div class="controls">
-            <div></div><div class="c-btn" id="up-btn">▲</div><div></div>
-            <div class="c-btn" id="left-btn">◀</div><div class="c-btn" id="down-btn">▼</div><div class="c-btn" id="right-btn">▶</div>
+            <div></div><div class="c-btn" onpointerdown="input('up')">▲</div><div></div>
+            <div class="c-btn" onpointerdown="input('left')">◀</div><div class="c-btn" onpointerdown="input('down')">▼</div><div class="c-btn" onpointerdown="input('right')">▶</div>
         </div>
+        
+        <button onclick="stopGame()" style="margin-top: auto; border-color: red; color: red; box-shadow: none;">ВЫХОД</button>
     </div>
 </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+<script>
+    // --- АУДИО СИСТЕМА (Синтезатор) ---
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let ctx = new AudioCtx();
+    let isMuted = false;
+    let musicInterval = null;
+    let tempo = 200; // скорость музыки
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyDy-KwcsKCk1rSQtSpB6dCry-F1v8mxRNg",
-        authDomain: "pnake-5a242.firebaseapp.com",
-        databaseURL: "https://pnake-5a242-default-rtdb.firebaseio.com",
-        projectId: "pnake-5a242",
-        storageBucket: "pnake-5a242.firebasestorage.app",
-        messagingSenderId: "961270080510",
-        appId: "1:961270080510:web:440ca3fe3f8cdba78396af"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    let currentUser = null;
-    let gameInt = null;
-    let state = { s: [], d: 'right', nD: 'right', f: {x:5, y:5}, sc: 0 };
-    const cvs = document.getElementById('canvas');
-    const ctx = cvs.getContext('2d');
-
-    window.showScreen = (id) => {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        if(id === 'scr-menu') updateMenuUI();
-    };
-
-    function updateMenuUI() {
-        let users = JSON.parse(localStorage.getItem('pnake_users') || '{}');
-        let u = users[currentUser];
-        if(u) {
-            document.getElementById('u-coins').innerText = u.coins;
-            document.getElementById('u-name').innerText = currentUser;
-        }
+    // Звук "Пик" (нажатие, поворот)
+    function playTone(freq, type = 'sine', duration = 0.1) {
+        if(isMuted) return;
+        if(ctx.state === 'suspended') ctx.resume();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
     }
 
-    // Регистрация
-    document.getElementById('auth-reg-btn').onclick = () => {
-        const l = document.getElementById('login').value.trim();
-        const p = document.getElementById('pass').value.trim();
-        if(!l || !p) return alert("Заполни поля!");
-        let users = JSON.parse(localStorage.getItem('pnake_users') || '{}');
-        if(users[l]) return alert("Ник занят");
-        users[l] = { pass: p, coins: 0 };
-        localStorage.setItem('pnake_users', JSON.stringify(users));
-        alert("Успешно!");
-    };
+    // Фоновая музыка (процедурная)
+    function startMusic() {
+        if(musicInterval) clearInterval(musicInterval);
+        let noteIndex = 0;
+        // Пентатоника (приятные ноты)
+        const scale = [261.63, 311.13, 349.23, 392.00, 466.16, 523.25]; 
+        
+        musicInterval = setInterval(() => {
+            if(Math.random() > 0.3) { // Играем не каждую долю
+                const note = scale[Math.floor(Math.random() * scale.length)];
+                playTone(note, 'triangle', 0.3);
+            }
+        }, tempo);
+    }
 
-    // Вход
-    document.getElementById('auth-login-btn').onclick = () => {
-        const l = document.getElementById('login').value.trim();
-        const p = document.getElementById('pass').value.trim();
-        let users = JSON.parse(localStorage.getItem('pnake_users') || '{}');
-        if(users[l] && users[l].pass === p) {
-            currentUser = l;
-            window.showScreen('scr-menu');
-        } else alert("Ошибка входа!");
-    };
+    function updateMusicSpeed(level) {
+        if(isMuted) return;
+        clearInterval(musicInterval);
+        // Ускоряем музыку каждые 10 уровней
+        let newTempo = 200 - (level * 5); 
+        if(newTempo < 80) newTempo = 80;
+        tempo = newTempo;
+        startMusic();
+    }
 
-    // ТОП игроков
-    document.getElementById('menu-top-btn').onclick = () => {
-        window.showScreen('scr-top');
-        const list = document.getElementById('top-list');
-        list.innerHTML = "<tr><td colspan='3'>Загрузка...</td></tr>";
+    // --- ЛОГИКА ИГРЫ ---
+    let gameLoop;
+    let mode = 0; // 0: Классика, 1: Сквозь стены (с препятствиями), 2: Сквозь себя
+    let score = 0;
+    let level = 1;
+    let snake = [];
+    let food = {};
+    let obstacles = []; // Препятствия для 2 режима
+    let dir = 'right';
+    let nextDir = 'right';
 
-        try {
-            const q = query(ref(db, 'leaderboard'), orderByChild('score'), limitToLast(10));
-            onValue(q, (snap) => {
-                let data = [];
-                snap.forEach(c => { data.push(c.val()); });
-                data.sort((a,b) => b.score - a.score);
-                list.innerHTML = data.length ? data.map((v, i) => `<tr><td>${i+1}</td><td>${v.name}</td><td>${v.score}</td></tr>`).join('') : "<tr><td colspan='3'>Нет рекордов</td></tr>";
-            }, { onlyOnce: true });
-        } catch(e) { list.innerHTML = "<tr><td colspan='3'>Ошибка связи</td></tr>"; }
-    };
+    // Цветовые темы (каждые 10 очков)
+    const themes = [
+        '#0ff', // Cyan
+        '#f0f', // Magenta
+        '#0f0', // Green
+        '#ff0', // Yellow
+        '#f00', // Red (Scary)
+        '#fff'  // White
+    ];
 
-    // Игра
-    document.getElementById('menu-start-btn').onclick = () => {
-        window.showScreen('scr-game');
-        state = { s: [{x:10, y:10}], d: 'right', nD: 'right', f: {x:5, y:5}, sc: 0 };
-        if(gameInt) clearInterval(gameInt);
-        gameInt = setInterval(loop, 140);
-    };
+    // Настройки режимов
+    const modeDetails = [
+        { name: "КЛАССИКА", desc: "Стены и хвост убивают. Ешь еду.", key: "classic" },
+        { name: "СТЕНЫ", desc: "Проходи сквозь стены! Осторожно: препятствия.", key: "walls" },
+        { name: "ПРИЗРАК", desc: "Можно проходить сквозь свой хвост!", key: "ghost" }
+    ];
 
-    const setD = (d) => {
+    function selectMode(m) {
+        mode = m;
+        playTone(400, 'square', 0.05);
+        document.querySelectorAll('.mode-btn').forEach((b, i) => {
+            b.classList.toggle('active-mode', i === m);
+        });
+        document.getElementById('mode-desc').innerText = modeDetails[m].desc;
+        updateBestScore();
+    }
+
+    function updateBestScore() {
+        const key = 'pnake_best_' + modeDetails[mode].key;
+        const best = localStorage.getItem(key) || 0;
+        document.getElementById('best-score').innerText = best;
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        document.getElementById('mute-btn').innerText = isMuted ? "ЗВУК: ВЫКЛ" : "ЗВУК: ВКЛ";
+    }
+
+    function startGame() {
+        document.getElementById('scr-menu').classList.remove('active');
+        document.getElementById('scr-game').classList.add('active');
+        
+        // Сброс
+        snake = [{x: 10, y: 10}, {x: 9, y: 10}];
+        dir = 'right'; nextDir = 'right';
+        score = 0;
+        level = 1;
+        obstacles = [];
+        tempo = 200;
+
+        // Если режим 2 (Стены), добавляем препятствия
+        if(mode === 1) generateObstacles();
+        
+        spawnFood();
+        applyTheme(0);
+        updateUI();
+        
+        if(!isMuted) startMusic();
+        
+        if(gameLoop) clearInterval(gameLoop);
+        gameLoop = setInterval(step, 130);
+    }
+
+    function stopGame() {
+        clearInterval(gameLoop);
+        clearInterval(musicInterval);
+        document.getElementById('scr-game').classList.remove('active');
+        document.getElementById('scr-menu').classList.add('active');
+        document.getElementById('app').classList.remove('shake-screen');
+        updateBestScore();
+    }
+
+    function input(d) {
         const opp = {up:'down', down:'up', left:'right', right:'left'};
-        if(d !== opp[state.d]) state.nD = d;
+        if(d !== opp[dir]) {
+            nextDir = d;
+            playTone(300, 'sine', 0.05); // Звук поворота
+        }
+    }
+
+    // Управление клавиатурой
+    window.onkeydown = e => {
+        if(e.key === 'ArrowUp') input('up');
+        if(e.key === 'ArrowDown') input('down');
+        if(e.key === 'ArrowLeft') input('left');
+        if(e.key === 'ArrowRight') input('right');
     };
 
-    document.getElementById('up-btn').onclick = () => setD('up');
-    document.getElementById('down-btn').onclick = () => setD('down');
-    document.getElementById('left-btn').onclick = () => setD('left');
-    document.getElementById('right-btn').onclick = () => setD('right');
+    function generateObstacles() {
+        obstacles = [];
+        // 5 случайных стенок внутри поля
+        for(let i=0; i<5; i++) {
+            obstacles.push({
+                x: Math.floor(Math.random()*20),
+                y: Math.floor(Math.random()*20)
+            });
+        }
+    }
 
-    function loop() {
-        state.d = state.nD;
-        let h = {...state.s[0]};
-        if(state.d === 'up') h.y--; if(state.d === 'down') h.y++;
-        if(state.d === 'left') h.x--; if(state.d === 'right') h.x++;
+    function spawnFood() {
+        let valid = false;
+        while(!valid) {
+            food = {x: Math.floor(Math.random()*20), y: Math.floor(Math.random()*20)};
+            // Чтобы еда не появилась в змейке или препятствии
+            valid = !snake.some(s => s.x === food.x && s.y === food.y) &&
+                    !obstacles.some(o => o.x === food.x && o.y === food.y);
+        }
+    }
 
-        if(h.x<0 || h.x>=20 || h.y<0 || h.y>=20 || state.s.find(p=>p.x==h.x && p.y==h.y)) {
-            clearInterval(gameInt);
-            alert("Конец! Счет: " + state.sc);
-            let users = JSON.parse(localStorage.getItem('pnake_users') || '{}');
-            users[currentUser].coins += state.sc;
-            localStorage.setItem('pnake_users', JSON.stringify(users));
-            push(ref(db, 'leaderboard'), { name: currentUser, score: state.sc });
-            window.showScreen('scr-menu');
-            return;
+    function step() {
+        dir = nextDir;
+        let head = {...snake[0]};
+
+        if(dir === 'up') head.y--;
+        if(dir === 'down') head.y++;
+        if(dir === 'left') head.x--;
+        if(dir === 'right') head.x++;
+
+        // ОБРАБОТКА РЕЖИМОВ (Стены)
+        if(mode === 1) { // Режим СТЕНЫ: проходим сквозь, но есть препятствия
+            if(head.x < 0) head.x = 19;
+            if(head.x >= 20) head.x = 0;
+            if(head.y < 0) head.y = 19;
+            if(head.y >= 20) head.y = 0;
+            
+            // Столкновение с препятствием = смерть
+            if(obstacles.some(o => o.x === head.x && o.y === head.y)) {
+                gameOver(); return;
+            }
+        } else { // Режимы 0 и 2: Стены убивают
+            if(head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20) {
+                gameOver(); return;
+            }
         }
 
-        state.s.unshift(h);
-        if(h.x==state.f.x && h.y==state.f.y) {
-            state.sc++;
-            document.getElementById('score').innerText = state.sc;
-            state.f = {x:Math.floor(Math.random()*20), y:Math.floor(Math.random()*20)};
-        } else state.s.pop();
+        // ОБРАБОТКА ХВОСТА
+        // Режим 2 (Призрак): хвост не убивает. Остальные режимы: убивает.
+        if(mode !== 2) {
+            if(snake.some(s => s.x === head.x && s.y === head.y)) {
+                gameOver(); return;
+            }
+        }
 
-        ctx.clearRect(0,0,400,400);
-        ctx.fillStyle = "red"; ctx.fillRect(state.f.x*20+2, state.f.y*20+2, 16, 16);
-        ctx.fillStyle = "#ff007f"; state.s.forEach(p => ctx.fillRect(p.x*20+1, p.y*20+1, 18, 18));
+        snake.unshift(head);
+
+        // ЕДА
+        if(head.x === food.x && head.y === food.y) {
+            score++;
+            playTone(600, 'square', 0.1); // Звук поедания
+            
+            // Логика уровней (каждые 10 очков)
+            if(score % 10 === 0) {
+                level++;
+                playTone(800, 'sawtooth', 0.5); // Звук уровня
+                applyTheme(Math.floor(score/10) % themes.length);
+                updateMusicSpeed(level);
+                
+                // Если режим СТЕНЫ, меняем препятствия каждый уровень
+                if(mode === 1) generateObstacles();
+            }
+            
+            updateUI();
+            spawnFood();
+        } else {
+            snake.pop();
+        }
+
+        draw();
     }
+
+    function applyTheme(themeIndex) {
+        const color = themes[themeIndex];
+        const r = document.querySelector(':root');
+        r.style.setProperty('--neon', color);
+        
+        // Если уровень высокий (например, каждый 3-й десяток), экран трясется
+        const app = document.getElementById('app');
+        if(level > 1 && score % 10 === 0 && score > 0) {
+            // Кратковременная тряска при повышении уровня
+            app.classList.add('shake-screen');
+            setTimeout(() => app.classList.remove('shake-screen'), 1000);
+        }
+        
+        // Если уровень очень высокий (>5), легкая постоянная дрожь
+        if(level >= 5) {
+             // Можно добавить класс permanent-shake, если захочешь хардкора
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('score').innerText = score;
+        document.getElementById('level').innerText = level;
+    }
+
+    function gameOver() {
+        playTone(150, 'sawtooth', 0.5); // Звук проигрыша
+        alert("Гейм овер! Счет: " + score);
+        
+        // Сохранение рекорда
+        const key = 'pnake_best_' + modeDetails[mode].key;
+        const currentBest = parseInt(localStorage.getItem(key) || 0);
+        if(score > currentBest) {
+            localStorage.setItem(key, score);
+        }
+        
+        stopGame();
+    }
+
+    function draw() {
+        const cvs = document.getElementById('canvas');
+        const c = cvs.getContext('2d');
+        c.clearRect(0,0,400,400);
+
+        // Отрисовка препятствий (только режим 1)
+        if(mode === 1) {
+            c.fillStyle = "#555";
+            c.shadowBlur = 0;
+            obstacles.forEach(o => {
+                c.fillRect(o.x*20+2, o.y*20+2, 16, 16);
+                // Крестик на препятствии
+                c.strokeStyle = "red";
+                c.beginPath();
+                c.moveTo(o.x*20+2, o.y*20+2); c.lineTo(o.x*20+18, o.y*20+18);
+                c.moveTo(o.x*20+18, o.y*20+2); c.lineTo(o.x*20+2, o.y*20+18);
+                c.stroke();
+            });
+        }
+
+        // Еда
+        c.fillStyle = "white"; // Белая сердцевина
+        c.shadowColor = getComputedStyle(document.documentElement).getPropertyValue('--neon');
+        c.shadowBlur = 15;
+        c.beginPath();
+        c.arc(food.x*20+10, food.y*20+10, 7, 0, Math.PI*2);
+        c.fill();
+
+        // Змейка
+        c.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--neon');
+        snake.forEach((s, i) => {
+            c.shadowBlur = i===0 ? 20 : 5; // Голова светится сильнее
+            c.fillRect(s.x*20+1, s.y*20+1, 18, 18);
+            
+            // Если режим Призрак, делаем хвост полупрозрачным
+            if(mode === 2 && i > 0) c.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--neon') + '80'; // 50% opacity
+        });
+    }
+    
+    // Инициализация при загрузке
+    selectMode(0);
 </script>
 </body>
 </html>
