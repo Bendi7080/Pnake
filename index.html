@@ -10,10 +10,10 @@
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #FFF0F5; /* LavenderBlush - очень светло-розовый */
+            background-color: #FFF0F5; /* Светло-розовый фон */
             font-family: 'Fredoka One', cursive;
-            touch-action: none; /* Отключает зум и скролл на мобильных */
-            -webkit-user-select: none; /* Safari */
+            touch-action: none;
+            -webkit-user-select: none;
             user-select: none;
         }
 
@@ -22,7 +22,7 @@
             margin: 0 auto;
         }
 
-        /* Интерфейс (счет и кнопка настроек) */
+        /* Интерфейс: счет и шестеренка */
         #ui-layer {
             position: absolute;
             top: 0;
@@ -33,6 +33,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            z-index: 10;
         }
 
         .header {
@@ -45,14 +46,13 @@
 
         .score-board {
             font-size: 24px;
-            color: #FF69B4; /* HotPink */
+            color: #FF69B4;
             text-shadow: 2px 2px 0px #FFF;
         }
 
-        /* Кнопка настроек (шестеренка) */
         .settings-btn {
             font-size: 24px;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.7);
             border: 2px solid #FF69B4;
             border-radius: 50%;
             width: 50px;
@@ -63,10 +63,6 @@
             cursor: pointer;
             color: #FF69B4;
             box-shadow: 0 4px 10px rgba(255, 105, 180, 0.2);
-            transition: transform 0.2s;
-        }
-        .settings-btn:active {
-            transform: scale(0.9);
         }
 
         /* Экран Магазина */
@@ -76,8 +72,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 240, 245, 0.98); /* Почти непрозрачный фон */
-            display: none; /* Скрыт по умолчанию */
+            background: rgba(255, 240, 245, 0.98);
+            display: none; /* Появится через JS */
             flex-direction: column;
             align-items: center;
             padding-top: 20px;
@@ -93,88 +89,7 @@
             text-shadow: 2px 2px 0 #FFF;
         }
 
-        .shop-section {
-            width: 90%;
-            margin-bottom: 25px;
-            background: #FFF;
-            border-radius: 20px;
-            padding: 15px;
-            box-shadow: 0 5px 15px rgba(255, 182, 193, 0.3);
-            border: 2px solid #FFC0CB;
-        }
-
-        .section-title {
-            font-size: 20px;
-            color: #FF69B4;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        .items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-            gap: 10px;
-        }
-
-        .shop-item {
-            aspect-ratio: 1;
-            border-radius: 15px;
-            background: #FAFAFA;
-            border: 2px solid #EEE;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            position: relative;
-            transition: transform 0.1s;
-        }
-
-        .shop-item:active {
-            transform: scale(0.95);
-        }
-
-        .shop-item.selected {
-            border: 3px solid #FF69B4;
-            background: #FFF0F5;
-        }
-
-        .shop-item.locked {
-            opacity: 0.6;
-            filter: grayscale(0.8);
-        }
-
-        /* Индикаторы редкости */
-        .rarity-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            position: absolute;
-            top: 5px;
-            right: 5px;
-        }
-        .basic { background: #A0A0A0; } /* Серый */
-        .rare { background: #00BFFF; box-shadow: 0 0 5px #00BFFF; } /* Голубой */
-        .epic { background: #9370DB; box-shadow: 0 0 5px #9370DB; } /* Фиолетовый */
-        .legendary { background: #FFD700; box-shadow: 0 0 8px #FFD700; } /* Золотой */
-
-        .item-preview {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            margin-bottom: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 14px;
-        }
-
-        .price-tag {
-            font-size: 12px;
-            color: #666;
-        }
-
-        /* Красивая розовая стрелка НАЗАД */
+        /* Розовая стрелка Назад */
         .back-arrow {
             position: absolute;
             top: 20px;
@@ -189,30 +104,76 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 4px 10px rgba(255, 105, 180, 0.2);
-            border: 2px solid #FF69B4;
+            box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
+            border: 3px solid #FF69B4;
+            transition: transform 0.2s;
         }
-        .back-arrow:active {
-            transform: scale(0.9);
+        .back-arrow:active { transform: scale(0.9); }
+
+        .shop-section {
+            width: 90%;
+            margin-bottom: 25px;
+            background: #FFF;
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(255, 182, 193, 0.3);
+            border: 2px solid #FFC0CB;
+            box-sizing: border-box;
         }
 
-        /* Джойстик (если нужен, оставим скрытым для тача по экрану) */
-        #joystick-zone {
-            display: none; 
+        .section-title {
+            font-size: 20px;
+            color: #FF69B4;
+            margin-bottom: 12px;
+            text-align: center;
         }
 
-        /* Лица (глазки) превью */
-        .eye-preview {
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+            gap: 12px;
+        }
+
+        .shop-item {
+            aspect-ratio: 1;
+            border-radius: 15px;
+            background: #FAFAFA;
+            border: 2px solid #EEE;
             display: flex;
-            gap: 2px;
-        }
-        .eye-dot {
-            width: 4px;
-            height: 4px;
-            background: black;
-            border-radius: 50%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
         }
 
+        .shop-item.selected { border: 3px solid #FF69B4; background: #FFF0F5; }
+        .shop-item.locked { opacity: 0.6; }
+
+        /* Индикаторы редкости */
+        .rarity-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            position: absolute;
+            top: 6px;
+            right: 6px;
+        }
+        .basic { background: #B0B0B0; }
+        .rare { background: #00BFFF; box-shadow: 0 0 5px #00BFFF; }
+        .epic { background: #BF5FFF; box-shadow: 0 0 5px #BF5FFF; }
+        .legendary { background: #FFD700; box-shadow: 0 0 8px #FFD700; }
+
+        .item-preview {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .price-tag { font-size: 11px; color: #555; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -229,27 +190,24 @@
         <h2>Магазин</h2>
 
         <div class="shop-section">
-            <div class="section-title">Цвет Змейки</div>
-            <div class="items-grid" id="color-grid">
-                </div>
+            <div class="section-title">Цвет Pnake</div>
+            <div class="items-grid" id="color-grid"></div>
         </div>
 
         <div class="shop-section">
-            <div class="section-title">Личико</div>
-            <div class="items-grid" id="face-grid">
-                </div>
+            <div class="section-title">Глазки (Лица)</div>
+            <div class="items-grid" id="face-grid"></div>
         </div>
 
         <div class="shop-section">
             <div class="section-title">Вкусняшки</div>
-            <div class="items-grid" id="food-grid">
-                </div>
+            <div class="items-grid" id="food-grid"></div>
         </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
-    <script>
+        <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -257,97 +215,160 @@
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            tileCountX = Math.floor(canvas.width / gridSize);
+            tileCountY = Math.floor(canvas.height / gridSize);
         }
-        window.addEventListener('resize', resize);
-        resize();
 
-        // --- ДАННЫЕ ИГРЫ ---
+        // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
         let score = 0;
-        let crystals = 100; // Стартовый капитал для тестов
-        let gameRunning = true;
+        let crystals = 100; 
+        let isShopOpen = false;
+        const gridSize = 25;
+        let tileCountX, tileCountY;
+
         let snake = [{x: 10, y: 10}];
         let velocity = {x: 0, y: 0};
-        let gridSize = 25; // Размер клетки
-        let tileCountX = Math.floor(canvas.width / gridSize);
-        let tileCountY = Math.floor(canvas.height / gridSize);
-
-        // Еда
         let food = {x: 5, y: 5};
-        let currentFoodType = 'apple'; // 'apple', 'cherry', 'peach', 'burger'
 
-        // Настройки змейки (Визуал)
-        let snakeColor = '#FF69B4'; // Розовый по умолчанию
-        let currentFace = 'normal'; // 'normal', 'happy', 'cool', 'kawaii'
+        // Текущие настройки (то, что выбрано)
+        let snakeColor = '#FF69B4'; 
+        let currentFace = 'normal'; 
+        let currentFoodType = 'apple';
 
-        // --- БАЗА ДАННЫХ МАГАЗИНА ---
+        // База данных магазина
         const shopData = {
             colors: [
                 { id: 'pink', name: 'Розовый', color: '#FF69B4', price: 0, rarity: 'basic' },
-                { id: 'blue', name: 'Небо', color: '#87CEEB', price: 50, rarity: 'rare' },
-                { id: 'mint', name: 'Мята', color: '#98FF98', price: 50, rarity: 'rare' },
-                { id: 'lavender', name: 'Лаванда', color: '#E6E6FA', price: 100, rarity: 'epic' },
-                { id: 'gold', name: 'Золото', color: '#FFD700', price: 500, rarity: 'legendary' }
+                { id: 'blue', name: 'Голубой', color: '#87CEEB', price: 50, rarity: 'rare' },
+                { id: 'mint', name: 'Мятный', color: '#98FF98', price: 50, rarity: 'rare' },
+                { id: 'light green', name: 'Салатовый', color: '#90EE90', price: 100, rarity: 'epic' },
+                { id: 'lavender', name: 'Лавандовый', color: '#E6E6FA', price: 150, rarity: 'epic' },
+                { id: 'indian red', name: 'Красный', color: '#CD5C5C', price: 250, rarity: 'legendary' },
+                { id: 'gold', name: 'Золотой', color: '#FFD700', price: 400, rarity: 'legendary' }
             ],
             faces: [
-                { id: 'normal', name: 'Обычные', type: 'face', price: 0, rarity: 'basic' },
-                { id: 'happy', name: 'Веселые', type: 'face', price: 100, rarity: 'rare' },
-                { id: 'kawaii', name: 'Кавай', type: 'face', price: 300, rarity: 'epic' },
-                { id: 'cool', name: 'Крутые', type: 'face', price: 1000, rarity: 'legendary' }
+                { id: 'normal', name: 'Точки', price: 0, rarity: 'basic' },
+                { id: 'happy', name: 'Улыбка', price: 100, rarity: 'rare' },
+                { id: 'kawaii', name: 'Кавай', price: 150, rarity: 'epic' },
+                { id: 'cool', name: 'Крутой', price: 300, rarity: 'legendary' }
             ],
             food: [
-                { id: 'apple', name: 'Яблоко', icon: '🍎', price: 0, rarity: 'basic' },
-                { id: 'cherry', name: 'Вишня', icon: '🍒', price: 30, rarity: 'rare' },
-                { id: 'peach', name: 'Персик', icon: '🍑', price: 80, rarity: 'epic' },
-                { id: 'burger', name: 'Бургер', icon: '🍔', price: 200, rarity: 'legendary' }
+                { id: 'apple', icon: '🍎', price: 0, rarity: 'basic' },
+                { id: 'banana', icon: '🍌', price: 50, rarity: 'rare' },
+                { id: 'strawberry', icon: '🍓'. price: 50, rarity: 'rare' },
+                { id: 'cherry', icon: '🍒', price: 50, rarity: 'rare' },
+                { id: 'blueberry', icon: '🫐', price: 100, ratity: 'epic'
+                { id: 'pizza', icon: '🍕', price: 120, rarity: 'epic' },
+                { id: 'burger', icon: '🍔', price: 120, rarity: 'epic' },
+                { id: 'tulip', icon: '🌷', price: 200, rarity: 'legendary' },
+                { id: 'rose', icon: '🌹', price: 200, rarity: 'legendary' }
             ]
         };
 
-        // Состояние покупок (храним ID купленных предметов)
+        // Инвентарь (храним купленные ID)
         let inventory = {
             colors: ['pink'],
             faces: ['normal'],
             food: ['apple']
         };
 
-        // --- ЛОГИКА ИГРЫ ---
-        
-        function gameLoop() {
-            if(!isShopOpen) {
-                update();
-            }
-            draw();
-            setTimeout(gameLoop, 1000 / 10); // 10 FPS
+        // --- ЛОГИКА МАГАЗИНА ---
+        function toggleShop() {
+            isShopOpen = !isShopOpen;
+            const shop = document.getElementById('shop-screen');
+            shop.style.display = isShopOpen ? 'flex' : 'none';
+            if (isShopOpen) renderShop();
         }
 
+        function renderShop() {
+            renderSection('color-grid', shopData.colors, 'color');
+            renderSection('face-grid', shopData.faces, 'face');
+            renderSection('food-grid', shopData.food, 'food');
+        }
+
+        function renderSection(gridId, items, type) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = '';
+
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = `shop-item ${item.rarity}`;
+                
+                // Проверка владения и выбора
+                const isOwned = inventory[type === 'color' ? 'colors' : type === 'face' ? 'faces' : 'food'].includes(item.id);
+                const isSelected = (type === 'color' && snakeColor === item.color) ||
+                                 (type === 'face' && currentFace === item.id) ||
+                                 (type === 'food' && currentFoodType === item.id);
+
+                if (isSelected) div.classList.add('selected');
+                if (!isOwned) div.classList.add('locked');
+
+                // Создаем иконку для превью
+                let preview = '';
+                if (type === 'color') preview = `<div class="item-preview" style="background:${item.color}; border-radius:50%"></div>`;
+                if (type === 'food') preview = `<div class="item-preview" style="font-size:24px">${item.icon}</div>`;
+                if (type === 'face') {
+                    let faceText = '● ●';
+                    if (item.id === 'happy') faceText = '^ ^';
+                    if (item.id === 'kawaii') faceText = '◕ ◕';
+                    if (item.id === 'cool') faceText = '🕶';
+                    preview = `<div class="item-preview" style="font-size:14px; color:#333">${faceText}</div>`;
+                }
+
+                div.innerHTML = `
+                    <div class="rarity-dot ${item.rarity}"></div>
+                    ${preview}
+                    <div class="price-tag">${isOwned ? (isSelected ? 'Снято' : 'Надеть') : '💎 ' + item.price}</div>
+                `;
+
+                div.onclick = () => {
+                    if (isOwned) {
+                        if (type === 'color') snakeColor = item.color;
+                        if (type === 'face') currentFace = item.id;
+                        if (type === 'food') currentFoodType = item.id;
+                    } else if (crystals >= item.price) {
+                        crystals -= item.price;
+                        inventory[type === 'color' ? 'colors' : type === 'face' ? 'faces' : 'food'].push(item.id);
+                        document.getElementById('crystals').innerText = crystals;
+                    }
+                    renderShop();
+                };
+                grid.appendChild(div);
+            });
+        }
+
+        // --- ЛОГИКА ИГРЫ ---
         function update() {
-            // Движение
+            if (isShopOpen || (velocity.x === 0 && velocity.y === 0)) return;
+
             const head = {x: snake[0].x + velocity.x, y: snake[0].y + velocity.y};
 
-            // Проход сквозь стены
+            // Стены
             if(head.x < 0) head.x = tileCountX - 1;
             if(head.x >= tileCountX) head.x = 0;
             if(head.y < 0) head.y = tileCountY - 1;
             if(head.y >= tileCountY) head.y = 0;
 
-            // Еда
-            if(head.x === food.x && head.y === food.y) {
-                score++;
-                crystals += 2; // Кристаллы за еду
-                updateUI();
-                spawnFood();
-            } else {
-                snake.pop(); // Удаляем хвост, если не поели
-            }
-
             // Столкновение с собой
             for(let part of snake) {
-                if(head.x === part.x && head.y === part.y && (velocity.x !==0 || velocity.y !==0)) {
+                if(head.x === part.x && head.y === part.y) {
                     resetGame();
                     return;
                 }
             }
 
             snake.unshift(head);
+
+            // Поедание
+            if(head.x === food.x && head.y === food.y) {
+                score++;
+                crystals += 2;
+                document.getElementById('score').innerText = score;
+                document.getElementById('crystals').innerText = crystals;
+                spawnFood();
+            } else {
+                snake.pop();
+            }
         }
 
         function spawnFood() {
@@ -359,244 +380,104 @@
             snake = [{x: 10, y: 10}];
             velocity = {x: 0, y: 0};
             score = 0;
-            updateUI();
+            document.getElementById('score').innerText = score;
         }
 
-        // --- ОТРИСОВКА ---
         function draw() {
-            // Фон
             ctx.fillStyle = '#FFF0F5';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Еда
-            let foodIcon = shopData.food.find(f => f.id === currentFoodType).icon;
+            // Рисуем еду
+            const foodIcon = shopData.food.find(f => f.id === currentFoodType).icon;
             ctx.font = `${gridSize}px Arial`;
-            ctx.fillText(foodIcon, food.x * gridSize, food.y * gridSize + gridSize - 2);
+            ctx.fillText(foodIcon, food.x * gridSize, food.y * gridSize + gridSize - 5);
 
-            // Змейка
-            for(let i = 0; i < snake.length; i++) {
-                let part = snake[i];
-                
-                // Тело
+            // Рисуем Pnake
+            snake.forEach((part, i) => {
                 ctx.fillStyle = snakeColor;
-                
-                // Скругляем голову и хвост
-                if (i === 0) { // Голова
-                    drawHead(part.x, part.y);
-                } else { // Тело
-                    ctx.beginPath();
-                    ctx.roundRect(part.x * gridSize + 1, part.y * gridSize + 1, gridSize - 2, gridSize - 2, 8);
-                    ctx.fill();
+                ctx.beginPath();
+                const radius = i === 0 ? 10 : 6;
+                ctx.roundRect(part.x * gridSize + 1, part.y * gridSize + 1, gridSize - 2, gridSize - 2, radius);
+                ctx.fill();
+
+                // Рисуем глазки на голове
+                if (i === 0) {
+                    drawFace(part.x * gridSize, part.y * gridSize);
                 }
-            }
+            });
         }
 
-        function drawHead(x, y) {
-            let px = x * gridSize;
-            let py = y * gridSize;
-            
-            ctx.fillStyle = snakeColor;
-            ctx.beginPath();
-            ctx.roundRect(px, py, gridSize, gridSize, 10);
-            ctx.fill();
-
-            // Рисуем ЛИЦО (глазки)
-            ctx.fillStyle = 'black'; // Цвет глаз
-            
-            let eyeOffset = gridSize / 4;
-            let eyeSize = 3;
+        function drawFace(x, y) {
+            ctx.fillStyle = '#000';
+            const eyeSize = 3;
+            const offset = gridSize / 4;
 
             if (currentFace === 'normal') {
-                // Обычные точки
                 ctx.beginPath();
-                ctx.arc(px + eyeOffset, py + eyeOffset, eyeSize, 0, Math.PI*2);
-                ctx.arc(px + gridSize - eyeOffset, py + eyeOffset, eyeSize, 0, Math.PI*2);
+                ctx.arc(x + offset, y + offset + 2, eyeSize, 0, Math.PI*2);
+                ctx.arc(x + gridSize - offset, y + offset + 2, eyeSize, 0, Math.PI*2);
                 ctx.fill();
             } else if (currentFace === 'happy') {
-                // Дуги ^ ^
+                ctx.strokeStyle = '#000';
                 ctx.lineWidth = 2;
-                ctx.strokeStyle = '#333';
                 ctx.beginPath();
-                ctx.arc(px + eyeOffset, py + eyeOffset + 2, 4, Math.PI, 0); // Левый
+                ctx.arc(x + offset, y + offset + 4, 4, Math.PI, 0);
                 ctx.stroke();
                 ctx.beginPath();
-                ctx.arc(px + gridSize - eyeOffset, py + eyeOffset + 2, 4, Math.PI, 0); // Правый
+                ctx.arc(x + gridSize - offset, y + offset + 4, 4, Math.PI, 0);
                 ctx.stroke();
             } else if (currentFace === 'kawaii') {
-                // Большие блестящие глаза
-                ctx.fillStyle = '#222';
+                ctx.fillStyle = '#000';
                 ctx.beginPath();
-                ctx.arc(px + eyeOffset, py + eyeOffset + 2, 5, 0, Math.PI*2);
-                ctx.arc(px + gridSize - eyeOffset, py + eyeOffset + 2, 5, 0, Math.PI*2);
+                ctx.arc(x + offset, y + offset + 4, 5, 0, Math.PI*2);
+                ctx.arc(x + gridSize - offset, y + offset + 4, 5, 0, Math.PI*2);
                 ctx.fill();
-                // Блики
-                ctx.fillStyle = 'white';
+                ctx.fillStyle = '#FFF';
                 ctx.beginPath();
-                ctx.arc(px + eyeOffset - 1, py + eyeOffset, 2, 0, Math.PI*2);
-                ctx.arc(px + gridSize - eyeOffset - 1, py + eyeOffset, 2, 0, Math.PI*2);
+                ctx.arc(x + offset - 1, y + offset + 3, 1.5, 0, Math.PI*2);
+                ctx.arc(x + gridSize - offset - 1, y + offset + 3, 1.5, 0, Math.PI*2);
                 ctx.fill();
             } else if (currentFace === 'cool') {
-                // Очки
-                ctx.fillStyle = 'black';
-                ctx.fillRect(px + 2, py + eyeOffset - 2, gridSize - 4, 8);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(x + 3, y + offset, gridSize - 6, 6); // Очки
             }
         }
 
-        // --- МАГАЗИН И UI ---
-        
-        let isShopOpen = false;
-        const shopScreen = document.getElementById('shop-screen');
-        const scoreEl = document.getElementById('score');
-        const crystalsEl = document.getElementById('crystals');
+        // Управление
+        window.addEventListener('keydown', e => {
+            if (e.key === 'ArrowUp' && velocity.y === 0) velocity = {x: 0, y: -1};
+            if (e.key === 'ArrowDown' && velocity.y === 0) velocity = {x: 0, y: 1};
+            if (e.key === 'ArrowLeft' && velocity.x === 0) velocity = {x: -1, y: 0};
+            if (e.key === 'ArrowRight' && velocity.x === 0) velocity = {x: 1, y: 0};
+        });
 
-        function updateUI() {
-            scoreEl.innerText = score;
-            crystalsEl.innerText = crystals;
-        }
-
-        function toggleShop() {
-            isShopOpen = !isShopOpen;
-            if (isShopOpen) {
-                shopScreen.style.display = 'flex';
-                renderShop();
-            } else {
-                shopScreen.style.display = 'none';
-            }
-        }
-
-        function renderShop() {
-            // 1. Цвета
-            const colorGrid = document.getElementById('color-grid');
-            colorGrid.innerHTML = '';
-            shopData.colors.forEach(item => {
-                createShopItem(item, colorGrid, 'color', item.color);
-            });
-
-            // 2. Лица (Глазки)
-            const faceGrid = document.getElementById('face-grid');
-            faceGrid.innerHTML = '';
-            shopData.faces.forEach(item => {
-                createShopItem(item, faceGrid, 'face', '#FFF'); // Фон белый для превью
-            });
-
-            // 3. Еда
-            const foodGrid = document.getElementById('food-grid');
-            foodGrid.innerHTML = '';
-            shopData.food.forEach(item => {
-                createShopItem(item, foodGrid, 'food', '#FFF');
-            });
-        }
-
-        function createShopItem(item, container, category, bgPreview) {
-            const div = document.createElement('div');
-            div.className = `shop-item ${item.rarity}`;
-            
-            // Проверка: куплено или выбрано?
-            let isOwned = inventory[category === 'color' ? 'colors' : category === 'face' ? 'faces' : 'food'].includes(item.id);
-            let isSelected = (category === 'color' && snakeColor === item.color) ||
-                             (category === 'face' && currentFace === item.id) ||
-                             (category === 'food' && currentFoodType === item.id);
-
-            if (isSelected) div.classList.add('selected');
-            if (!isOwned) div.classList.add('locked');
-
-            // Содержимое
-            let previewContent = '';
-            if (category === 'color') {
-                previewContent = `<div class="item-preview" style="background:${item.color}"></div>`;
-            } else if (category === 'food') {
-                previewContent = `<div class="item-preview" style="font-size:20px">${item.icon}</div>`;
-            } else if (category === 'face') {
-                // Превью глаз
-                let eyesHTML = '..';
-                if(item.id === 'happy') eyesHTML = '^^';
-                if(item.id === 'kawaii') eyesHTML = 'OwO';
-                if(item.id === 'cool') eyesHTML = 'B|';
-                previewContent = `<div class="item-preview" style="color:black; font-weight:bold">${eyesHTML}</div>`;
-            }
-
-            let priceHTML = isOwned ? (isSelected ? 'Выбрано' : 'Выбрать') : `💎 ${item.price}`;
-
-            div.innerHTML = `
-                <div class="rarity-dot ${item.rarity}"></div>
-                ${previewContent}
-                <div class="price-tag">${priceHTML}</div>
-            `;
-
-            // Клик
-            div.onclick = () => {
-                if (isOwned) {
-                    // Выбираем
-                    if (category === 'color') snakeColor = item.color;
-                    if (category === 'face') currentFace = item.id;
-                    if (category === 'food') currentFoodType = item.id;
-                    renderShop(); // Обновить рамки
-                } else {
-                    // Покупаем
-                    if (crystals >= item.price) {
-                        crystals -= item.price;
-                        updateUI();
-                        if (category === 'color') inventory.colors.push(item.id);
-                        if (category === 'face') inventory.faces.push(item.id);
-                        if (category === 'food') inventory.food.push(item.id);
-                        renderShop();
-                    } else {
-                        alert("Не хватает кристаллов!");
-                    }
-                }
-            };
-
-            container.appendChild(div);
-        }
-
-        // Управление (Свайпы)
-        let touchStartX = 0;
-        let touchStartY = 0;
-
-        document.addEventListener('touchstart', function(e) {
-            touchStartX = e.changedTouches[0].screenX;
-            touchStartY = e.changedTouches[0].screenY;
-        }, false);
-
-        document.addEventListener('touchend', function(e) {
-            if(isShopOpen) return; // Не управлять змейкой в магазине
-
-            let touchEndX = e.changedTouches[0].screenX;
-            let touchEndY = e.changedTouches[0].screenY;
-            
-            handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
-        }, false);
-
-        function handleSwipe(sx, sy, ex, ey) {
-            let dx = ex - sx;
-            let dy = ey - sy;
-            
+        // Свайпы для мобилок
+        let startX, startY;
+        canvas.addEventListener('touchstart', e => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        });
+        canvas.addEventListener('touchend', e => {
+            const dx = e.changedTouches[0].clientX - startX;
+            const dy = e.changedTouches[0].clientY - startY;
             if (Math.abs(dx) > Math.abs(dy)) {
-                // Горизонтально
-                if (dx > 0 && velocity.x !== -1) velocity = {x: 1, y: 0};
-                if (dx < 0 && velocity.x !== 1) velocity = {x: -1, y: 0};
+                if (dx > 0 && velocity.x === 0) velocity = {x: 1, y: 0};
+                else if (dx < 0 && velocity.x === 0) velocity = {x: -1, y: 0};
             } else {
-                // Вертикально
-                if (dy > 0 && velocity.y !== -1) velocity = {x: 0, y: 1};
-                if (dy < 0 && velocity.y !== 1) velocity = {x: 0, y: -1};
-            }
-        }
-
-        // Управление клавиатурой (для тестов на ПК)
-        document.addEventListener('keydown', e => {
-            if(isShopOpen) return;
-            switch(e.key) {
-                case 'ArrowUp': if(velocity.y !== 1) velocity = {x: 0, y: -1}; break;
-                case 'ArrowDown': if(velocity.y !== -1) velocity = {x: 0, y: 1}; break;
-                case 'ArrowLeft': if(velocity.x !== 1) velocity = {x: -1, y: 0}; break;
-                case 'ArrowRight': if(velocity.x !== -1) velocity = {x: 1, y: 0}; break;
+                if (dy > 0 && velocity.y === 0) velocity = {x: 0, y: 1};
+                else if (dy < 0 && velocity.y === 0) velocity = {x: 0, y: -1};
             }
         });
 
-        // Запуск
-        updateUI();
-        gameLoop();
+        function gameLoop() {
+            update();
+            draw();
+            setTimeout(gameLoop, 150);
+        }
 
+        window.addEventListener('resize', resize);
+        resize();
+        gameLoop();
     </script>
 </body>
 </html>
