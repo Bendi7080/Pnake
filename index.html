@@ -3,147 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neon Pnake: 3 Modes</title>
+    <title>Pink Pnake: RPG</title>
     <style>
         :root {
-            --neon: #0ff; /* Основной неоновый цвет */
-            --bg: #050505;
-            --panel: rgba(20, 20, 20, 0.9);
-            --text: #fff;
+            --primary: #ff69b4; /* Розовый */
+            --primary-light: #ffb6c1;
+            --bg-color: #fff0f5; /* Лавандовый румянец (светлый) */
+            --panel-bg: rgba(255, 255, 255, 0.8);
+            --text-color: #5c3a4d;
+            --border-radius: 15px;
+            --shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+            font-family: 'Verdana', sans-serif;
         }
 
-        * { touch-action: manipulation; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body.dark-mode {
+            --bg-color: #2c0e1e;
+            --panel-bg: rgba(44, 14, 30, 0.9);
+            --text-color: #ffb6c1;
+            --shadow: 0 4px 15px rgba(255, 105, 180, 0.5);
+        }
+
+        * { box-sizing: border-box; touch-action: manipulation; -webkit-tap-highlight-color: transparent; outline: none; }
 
         body {
             margin: 0; padding: 0;
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Courier New', sans-serif; /* Шрифт как в хакерских фильмах */
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex; justify-content: center; align-items: center;
             height: 100vh; overflow: hidden;
-            transition: background 1s ease;
+            transition: background 0.5s;
         }
 
         #app {
             width: 100%; max-width: 500px; height: 100%;
-            position: relative; display: flex; flex-direction: column;
-            border: 4px solid var(--neon);
-            box-shadow: 0 0 20px var(--neon), inset 0 0 20px var(--neon); /* Неоновое свечение стен */
-            background: var(--bg);
-            transition: border-color 1s, box-shadow 1s;
-        }
-
-        /* Анимация тряски экрана на высоких уровнях */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-
-        .shake-screen {
-            animation: shake 0.5s;
-            animation-iteration-count: infinite;
+            position: relative;
+            background: transparent;
         }
 
         .screen {
             display: none; flex-direction: column;
             align-items: center; justify-content: center;
-            padding: 20px; flex-grow: 1; width: 100%; height: 100%;
+            width: 100%; height: 100%; padding: 20px;
+            position: absolute; top: 0; left: 0;
+            background: var(--bg-color);
+            transition: background 0.5s;
+            overflow-y: auto; /* Для скролла в магазине */
         }
+        .screen.active { display: flex; z-index: 2; }
 
-        .active { display: flex; }
-
-        h1 { 
-            color: var(--neon); 
-            text-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon); 
-            font-size: 3rem; margin-bottom: 10px; text-transform: uppercase;
+        h1, h2 { color: var(--primary); text-transform: uppercase; margin-bottom: 10px; text-align: center; }
+        
+        .input-group { margin: 10px 0; width: 80%; }
+        input {
+            width: 100%; padding: 12px; border: 2px solid var(--primary-light);
+            border-radius: var(--border-radius); background: var(--panel-bg);
+            color: var(--text-color); font-size: 1rem;
         }
 
         button {
-            background: transparent; color: var(--text);
-            border: 2px solid var(--neon);
-            box-shadow: 0 0 5px var(--neon);
-            padding: 15px; margin: 8px; width: 80%;
-            cursor: pointer; font-size: 1.2rem; border-radius: 5px;
-            font-weight: bold; transition: 0.2s; text-transform: uppercase;
+            background: var(--primary); color: white;
+            border: none; padding: 12px 25px; margin: 8px;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem; cursor: pointer;
+            box-shadow: var(--shadow); transition: transform 0.2s;
+            width: 80%; font-weight: bold;
         }
-        button:active { background: var(--neon); color: black; box-shadow: 0 0 15px var(--neon); }
-        button.selected { background: var(--neon); color: black; }
+        button:active { transform: scale(0.95); }
+        button.secondary { background: var(--primary-light); }
+        button.small-btn { width: auto; padding: 8px 15px; font-size: 0.9rem; }
 
+        /* Settings Button */
+        .settings-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: transparent; border: 2px solid var(--primary);
+            color: var(--primary); width: 40px; height: 40px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            padding: 0; z-index: 10; font-size: 1.5rem;
+        }
+
+        /* Shop Grid */
+        .shop-container {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            width: 100%; margin-bottom: 60px;
+        }
+        .shop-section-title { width: 100%; grid-column: span 2; margin-top: 20px; border-bottom: 2px solid var(--primary-light); }
+        
+        .shop-item {
+            background: var(--panel-bg); border: 2px solid var(--primary-light);
+            border-radius: 10px; padding: 10px; text-align: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+        }
+        .shop-item.owned { border-color: #4CAF50; }
+        .shop-item.equipped { border-color: gold; box-shadow: 0 0 10px gold; }
+        .item-preview { width: 30px; height: 30px; margin-bottom: 5px; border-radius: 5px; }
+        .price-tag { font-size: 0.8rem; color: var(--text-color); margin-bottom: 5px; }
+
+        /* Game Elements */
         canvas {
-            background: rgba(0,0,0,0.8);
-            border: 2px solid var(--neon);
-            box-shadow: 0 0 10px var(--neon);
-            width: 90vw; height: 90vw;
-            max-width: 380px; max-height: 380px;
-            display: block; margin: 0 auto;
+            background: rgba(255, 255, 255, 0.5);
+            border: 4px solid var(--primary);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            max-width: 95vw;
         }
-
+        
         .stats {
-            display: flex; justify-content: space-between; width: 90%; 
-            margin-bottom: 10px; font-size: 1.2rem;
-            text-shadow: 0 0 5px var(--neon);
+            display: flex; justify-content: space-between; width: 90%;
+            margin-bottom: 10px; font-weight: bold; color: var(--primary);
         }
 
-        /* Джойстик */
         .controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px; width: 90%; margin-top: 20px;
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; width: 80%; margin-top: 15px;
         }
         .c-btn {
-            border: 1px solid var(--neon); border-radius: 10px;
-            height: 60px; display: flex; justify-content: center; align-items: center;
-            font-size: 2rem; color: var(--neon); user-select: none;
-            box-shadow: 0 0 5px var(--neon);
+            background: var(--panel-bg); border: 2px solid var(--primary);
+            border-radius: 50%; height: 60px; width: 60px; margin: 0 auto;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.5rem; color: var(--primary); user-select: none;
         }
-        .c-btn:active { background: var(--neon); color: black; }
+        .c-btn:active { background: var(--primary); color: white; }
 
-        .mode-selector {
-            display: flex; gap: 5px; margin-bottom: 20px; width: 100%; justify-content: center;
-        }
-        .mode-btn {
-            font-size: 0.8rem; padding: 10px; border: 1px solid #555;
-            flex: 1; opacity: 0.6;
-        }
-        .mode-btn.active-mode {
-            opacity: 1; border-color: var(--neon); 
-            box-shadow: 0 0 10px var(--neon); color: var(--neon);
-        }
-
+        /* Animated Gradients for Legendary Skins */
+        @keyframes rainbow { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        .grad-rainbow { background: linear-gradient(270deg, red, orange, yellow, green, blue, indigo, violet); background-size: 400% 400%; animation: rainbow 2s ease infinite; }
+        .grad-gold { background: linear-gradient(45deg, #FFD700, #FFFACD, #DAA520); background-size: 200% 200%; animation: rainbow 2s ease infinite; }
+        .grad-silver { background: linear-gradient(45deg, #C0C0C0, #E0E0E0, #A9A9A9); background-size: 200% 200%; animation: rainbow 2s ease infinite; }
     </style>
 </head>
 <body>
 
 <div id="app">
-    <div id="scr-menu" class="screen active">
-        <h1>NEON SNAKE</h1>
-        <p style="margin-bottom: 20px;">Выбери режим:</p>
+    <button class="settings-btn" onclick="toggleSettingsModal()">⚙️</button>
+
+    <div id="scr-auth" class="screen active">
+        <h1>PINK PNAKE</h1>
+        <div class="input-group">
+            <input type="text" id="auth-login" placeholder="Логин">
+        </div>
+        <div class="input-group">
+            <input type="password" id="auth-pass" placeholder="Пароль">
+        </div>
+        <button onclick="handleAuth('login')">ВОЙТИ</button>
+        <button class="secondary" onclick="handleAuth('register')">РЕГИСТРАЦИЯ</button>
+        <p id="auth-msg" style="color: red; font-size: 0.8rem; height: 20px;"></p>
+    </div>
+
+    <div id="scr-menu" class="screen">
+        <h2>Привет, <span id="display-username"></span>!</h2>
+        <p>Баланс: <b id="display-balance" style="color: gold; text-shadow: 1px 1px 0 #000;">0</b> зменет</p>
         
-        <div class="mode-selector">
-            <button class="mode-btn active-mode" onclick="selectMode(0)">КЛАССИКА</button>
-            <button class="mode-btn" onclick="selectMode(1)">СТЕНЫ</button>
-            <button class="mode-btn" onclick="selectMode(2)">ПРИЗРАК</button>
-        </div>
+        <button onclick="goToScreen('scr-modes')" style="margin-top: 30px;">ИГРАТЬ</button>
+        <button class="secondary" onclick="goToScreen('scr-shop')">МАГАЗИН</button>
+        <button class="secondary" onclick="logout()">ВЫЙТИ</button>
+    </div>
 
-        <div id="mode-desc" style="height: 50px; text-align: center; font-size: 0.9rem; margin-bottom: 10px; color: #aaa;">
-            Обычная игра. Стены убивают.
-        </div>
+    <div id="scr-modes" class="screen">
+        <h2>Выбери режим</h2>
+        <button onclick="selectMode(0)">КЛАССИКА</button>
+        <button onclick="selectMode(1)">СТЕНЫ</button>
+        <button onclick="selectMode(2)">ПРИЗРАК</button>
+        <button class="secondary small-btn" onclick="goToScreen('scr-menu')" style="margin-top: 20px;">НАЗАД</button>
+    </div>
 
-        <div style="margin-bottom: 20px;">
-            Рекорд в этом режиме: <b id="best-score" style="color:var(--neon)">0</b>
+    <div id="scr-shop" class="screen" style="display: none; padding-top: 60px;">
+        <h2>Магазин</h2>
+        <div style="position:fixed; top:10px; left:10px; background:var(--panel-bg); padding:5px; border-radius:5px; z-index:5;">
+            💰 <span id="shop-balance">0</span>
         </div>
-
-        <button onclick="startGame()">ИГРАТЬ</button>
-        <button onclick="toggleMute()" id="mute-btn">ЗВУК: ВКЛ</button>
+        <div id="shop-container" class="shop-container">
+            </div>
+        <button class="secondary" onclick="goToScreen('scr-menu')">НАЗАД В МЕНЮ</button>
     </div>
 
     <div id="scr-game" class="screen" style="justify-content: flex-start;">
@@ -159,161 +189,322 @@
             <div class="c-btn" onpointerdown="input('left')">◀</div><div class="c-btn" onpointerdown="input('down')">▼</div><div class="c-btn" onpointerdown="input('right')">▶</div>
         </div>
         
-        <button onclick="stopGame()" style="margin-top: auto; border-color: red; color: red; box-shadow: none;">ВЫХОД</button>
+        <button onclick="stopGame()" class="secondary small-btn" style="margin-top: auto;">ВЫХОД</button>
+    </div>
+
+    <div id="modal-settings" style="display:none; position:absolute; top:50px; right:10px; width:200px; background:var(--panel-bg); border:2px solid var(--primary); padding:10px; border-radius:10px; z-index:20;">
+        <h3 style="margin:0 0 10px 0; font-size:1rem;">Настройки</h3>
+        <button class="small-btn" onclick="toggleTheme()" style="width:100%; margin:5px 0;">🌙 Ночь / День</button>
+        <button class="small-btn" onclick="toggleSound()" style="width:100%; margin:5px 0;" id="btn-sound">🔊 Звук: ВКЛ</button>
+        <button class="small-btn secondary" onclick="toggleSettingsModal()" style="width:100%;">Закрыть</button>
     </div>
 </div>
 
 <script>
-    // --- АУДИО СИСТЕМА (Синтезатор) ---
+    // --- КОНФИГУРАЦИЯ И ДАННЫЕ ---
+    const DB_KEY = 'pnake_users_db';
+    let users = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+    let currentUser = null; // { username, password, balance, inventory: {colors:[], food:[]}, equipped: {color, food}, settings: {} }
+
+    // Магазин: Товары
+    const SHOP_ITEMS = {
+        colors: [
+            // Базовые (50)
+            { id: 'c_pink', name: 'Розовый', price: 0, type: 'color', val: '#ff69b4', cat: 'base' }, // Дефолт
+            { id: 'c_mint', name: 'Мятный', price: 50, type: 'color', val: '#98ff98', cat: 'base' },
+            { id: 'c_lavender', name: 'Лаванда', price: 50, type: 'color', val: '#e6e6fa', cat: 'base' },
+            { id: 'c_peach', name: 'Персик', price: 50, type: 'color', val: '#ffdab9', cat: 'base' },
+            { id: 'c_babyblue', name: 'Небо', price: 50, type: 'color', val: '#89cff0', cat: 'base' },
+            { id: 'c_lemon', name: 'Лимон', price: 50, type: 'color', val: '#fffacd', cat: 'base' },
+            // Редкие (150)
+            { id: 'c_black', name: 'Тьма', price: 150, type: 'color', val: '#000000', cat: 'rare' },
+            { id: 'c_white', name: 'Свет', price: 150, type: 'color', val: '#ffffff', cat: 'rare' },
+            { id: 'c_bw', name: 'Зебра', price: 150, type: 'stripe', val: ['#000', '#fff'], cat: 'rare' },
+            // Эпические (200)
+            { id: 'c_rw', name: 'Карамель', price: 200, type: 'stripe', val: ['#ff0000', '#ffffff'], cat: 'epic' },
+            { id: 'c_rb', name: 'Вампир', price: 200, type: 'stripe', val: ['#ff0000', '#000000'], cat: 'epic' },
+            { id: 'c_rwb', name: 'Трио', price: 200, type: 'stripe', val: ['#ff0000', '#ffffff', '#000000'], cat: 'epic' },
+            // Легендарные (500)
+            { id: 'c_rainbow', name: 'Радуга', price: 500, type: 'anim', val: 'rainbow', cat: 'leg' },
+            { id: 'c_gold', name: 'Золото', price: 500, type: 'anim', val: 'gold', cat: 'leg' },
+            { id: 'c_silver', name: 'Серебро', price: 500, type: 'anim', val: 'silver', cat: 'leg' },
+        ],
+        food: [
+            // Базовые (50) - Фрукты
+            { id: 'f_apple', name: 'Яблоко', price: 50, val: '🍎', cat: 'base' },
+            { id: 'f_grape', name: 'Виноград', price: 50, val: '🍇', cat: 'base' },
+            { id: 'f_peach', name: 'Персик', price: 50, val: '🍑', cat: 'base' },
+            // Редкие (75) - Ягоды
+            { id: 'f_cherry', name: 'Вишня', price: 75, val: '🍒', cat: 'rare' },
+            { id: 'f_straw', name: 'Клубника', price: 75, val: '🍓', cat: 'rare' },
+            { id: 'f_blueb', name: 'Голубика', price: 75, val: '🫐', cat: 'rare' },
+            // Эпические (100) - Цветы
+            { id: 'f_rose', name: 'Роза', price: 100, val: '🌹', cat: 'epic' },
+            { id: 'f_tulip', name: 'Тюльпан', price: 100, val: '🌷', cat: 'epic' },
+            { id: 'f_sun', name: 'Подсолнух', price: 100, val: '🌻', cat: 'epic' },
+            // Легендарные (200) - Выпечка
+            { id: 'f_crois', name: 'Круассан', price: 200, val: '🥐', cat: 'leg' },
+            { id: 'f_cake', name: 'Торт', price: 200, val: '🍰', cat: 'leg' },
+            { id: 'f_cookie', name: 'Печенье', price: 200, val: '🍪', cat: 'leg' },
+            // Дефолт
+            { id: 'f_def', name: 'Сфера', price: 0, val: '●', cat: 'base' } 
+        ]
+    };
+
+    // Звук
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    let ctx = new AudioCtx();
+    let audioCtx = new AudioCtx();
     let isMuted = false;
-    let musicInterval = null;
-    let tempo = 200; // скорость музыки
 
-    // Звук "Пик" (нажатие, поворот)
-    function playTone(freq, type = 'sine', duration = 0.1) {
+    function playTone(freq, type='sine', dur=0.1) {
         if(isMuted) return;
-        if(ctx.state === 'suspended') ctx.resume();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
         osc.type = type;
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(ctx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + dur);
     }
 
-    // Фоновая музыка (процедурная)
-    function startMusic() {
-        if(musicInterval) clearInterval(musicInterval);
-        let noteIndex = 0;
-        // Пентатоника (приятные ноты)
-        const scale = [261.63, 311.13, 349.23, 392.00, 466.16, 523.25]; 
-        
-        musicInterval = setInterval(() => {
-            if(Math.random() > 0.3) { // Играем не каждую долю
-                const note = scale[Math.floor(Math.random() * scale.length)];
-                playTone(note, 'triangle', 0.3);
+    // --- СИСТЕМА ЭКРАНОВ ---
+    function goToScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(id === 'scr-shop') renderShop();
+    }
+
+    // --- АВТОРИЗАЦИЯ ---
+    function handleAuth(type) {
+        const loginInput = document.getElementById('auth-login').value.trim();
+        const passInput = document.getElementById('auth-pass').value.trim();
+        const msg = document.getElementById('auth-msg');
+
+        if(!loginInput || !passInput) {
+            msg.innerText = "Введите логин и пароль!"; return;
+        }
+
+        if(type === 'register') {
+            if(users[loginInput]) {
+                msg.innerText = "Такой пользователь уже есть!";
+            } else {
+                users[loginInput] = {
+                    password: passInput,
+                    balance: 0,
+                    inventory: { colors: ['c_pink'], food: ['f_def'] },
+                    equipped: { color: 'c_pink', food: 'f_def' },
+                    settings: { darkMode: false }
+                };
+                saveUsers();
+                msg.style.color = 'green';
+                msg.innerText = "Успешно! Теперь войдите.";
             }
-        }, tempo);
+        } else {
+            if(users[loginInput] && users[loginInput].password === passInput) {
+                currentUser = users[loginInput];
+                currentUser.username = loginInput; // temporary ref
+                loadUserSettings();
+                updateMenuUI();
+                goToScreen('scr-menu');
+                msg.innerText = "";
+            } else {
+                msg.style.color = 'red';
+                msg.innerText = "Неверный логин или пароль";
+            }
+        }
     }
 
-    function updateMusicSpeed(level) {
-        if(isMuted) return;
-        clearInterval(musicInterval);
-        // Ускоряем музыку каждые 10 уровней
-        let newTempo = 200 - (level * 5); 
-        if(newTempo < 80) newTempo = 80;
-        tempo = newTempo;
-        startMusic();
+    function saveUsers() {
+        // Удаляем временное поле username перед сохранением
+        if(currentUser) delete currentUser.username;
+        localStorage.setItem(DB_KEY, JSON.stringify(users));
+        // Восстанавливаем
+        if(currentUser) currentUser.username = document.getElementById('display-username').innerText;
+    }
+
+    function logout() {
+        currentUser = null;
+        goToScreen('scr-auth');
+        document.getElementById('auth-login').value = '';
+        document.getElementById('auth-pass').value = '';
+    }
+
+    function updateMenuUI() {
+        document.getElementById('display-username').innerText = currentUser.username;
+        document.getElementById('display-balance').innerText = currentUser.balance;
+        document.getElementById('shop-balance').innerText = currentUser.balance;
+    }
+
+    // --- МАГАЗИН ---
+    function renderShop() {
+        const container = document.getElementById('shop-container');
+        container.innerHTML = '';
+
+        // Функция рендера секции
+        const renderSection = (title, items, typeKey) => {
+            const h3 = document.createElement('div');
+            h3.className = 'shop-section-title';
+            h3.innerText = title;
+            container.appendChild(h3);
+
+            items.forEach(item => {
+                const owned = currentUser.inventory[typeKey].includes(item.id);
+                const equipped = currentUser.equipped[typeKey === 'colors' ? 'color' : 'food'] === item.id;
+                
+                const div = document.createElement('div');
+                div.className = `shop-item ${owned ? 'owned' : ''} ${equipped ? 'equipped' : ''}`;
+                
+                // Превью
+                let preview = `<div class="item-preview" style="background:${item.val}"></div>`;
+                if(item.type === 'stripe') {
+                    preview = `<div class="item-preview" style="background: repeating-linear-gradient(45deg, ${item.val[0]}, ${item.val[0]} 5px, ${item.val[1]} 5px, ${item.val[1]} 10px);"></div>`;
+                } else if (item.type === 'anim') {
+                     preview = `<div class="item-preview grad-${item.val}"></div>`;
+                } else if (typeKey === 'food') {
+                    preview = `<div class="item-preview" style="font-size:24px; background:none;">${item.val}</div>`;
+                }
+
+                let btnText = "Купить";
+                if(owned) btnText = equipped ? "Надето" : "Надеть";
+
+                div.innerHTML = `
+                    ${preview}
+                    <div style="font-weight:bold; font-size:0.9rem;">${item.name}</div>
+                    <div class="price-tag">${owned ? 'Куплено' : item.price + ' 💎'}</div>
+                    <button class="small-btn ${equipped ? 'secondary' : ''}" onclick="shopAction('${item.id}', '${typeKey}', ${item.price})">${btnText}</button>
+                `;
+                container.appendChild(div);
+            });
+        };
+
+        renderSection("Цвета Змейки", SHOP_ITEMS.colors, 'colors');
+        renderSection("Еда", SHOP_ITEMS.food, 'food');
+    }
+
+    function shopAction(itemId, typeKey, price) {
+        // Проверка: куплено или нет
+        const owned = currentUser.inventory[typeKey].includes(itemId);
+
+        if (owned) {
+            // Надеть
+            currentUser.equipped[typeKey === 'colors' ? 'color' : 'food'] = itemId;
+            playTone(600, 'sine', 0.1);
+        } else {
+            // Купить
+            if(currentUser.balance >= price) {
+                if(confirm(`Купить за ${price} зменет?`)) {
+                    currentUser.balance -= price;
+                    currentUser.inventory[typeKey].push(itemId);
+                    currentUser.equipped[typeKey === 'colors' ? 'color' : 'food'] = itemId; // Автонадевание
+                    playTone(800, 'square', 0.2);
+                }
+            } else {
+                alert("Недостаточно зменет!");
+                playTone(150, 'sawtooth', 0.3);
+                return;
+            }
+        }
+        saveUsers();
+        updateMenuUI();
+        renderShop();
+    }
+
+    // --- НАСТРОЙКИ ---
+    function toggleSettingsModal() {
+        const m = document.getElementById('modal-settings');
+        m.style.display = m.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        if(currentUser) {
+            currentUser.settings.darkMode = document.body.classList.contains('dark-mode');
+            saveUsers();
+        }
+    }
+
+    function toggleSound() {
+        isMuted = !isMuted;
+        document.getElementById('btn-sound').innerText = isMuted ? "🔊 Звук: ВЫКЛ" : "🔊 Звук: ВКЛ";
+    }
+
+    function loadUserSettings() {
+        if(currentUser.settings.darkMode) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
     }
 
     // --- ЛОГИКА ИГРЫ ---
     let gameLoop;
-    let mode = 0; // 0: Классика, 1: Сквозь стены (с препятствиями), 2: Сквозь себя
+    let mode = 0;
     let score = 0;
     let level = 1;
     let snake = [];
     let food = {};
-    let obstacles = []; // Препятствия для 2 режима
+    let obstacles = [];
     let dir = 'right';
     let nextDir = 'right';
-
-    // Цветовые темы (каждые 10 очков)
-    const themes = [
-        '#0ff', // Cyan
-        '#f0f', // Magenta
-        '#0f0', // Green
-        '#ff0', // Yellow
-        '#f00', // Red (Scary)
-        '#fff'  // White
+    
+    // Нежные цвета для рандома
+    const pastelColors = [
+        '#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', 
+        '#F0E68C', '#E6E6FA', '#FFC0CB', '#98FB98', '#AFEEEE'
     ];
-
-    // Настройки режимов
-    const modeDetails = [
-        { name: "КЛАССИКА", desc: "Стены и хвост убивают. Ешь еду.", key: "classic" },
-        { name: "СТЕНЫ", desc: "Проходи сквозь стены! Осторожно: препятствия.", key: "walls" },
-        { name: "ПРИЗРАК", desc: "Можно проходить сквозь свой хвост!", key: "ghost" }
-    ];
+    let currentWallColor = '#ff69b4';
 
     function selectMode(m) {
         mode = m;
-        playTone(400, 'square', 0.05);
-        document.querySelectorAll('.mode-btn').forEach((b, i) => {
-            b.classList.toggle('active-mode', i === m);
-        });
-        document.getElementById('mode-desc').innerText = modeDetails[m].desc;
-        updateBestScore();
-    }
-
-    function updateBestScore() {
-        const key = 'pnake_best_' + modeDetails[mode].key;
-        const best = localStorage.getItem(key) || 0;
-        document.getElementById('best-score').innerText = best;
-    }
-
-    function toggleMute() {
-        isMuted = !isMuted;
-        document.getElementById('mute-btn').innerText = isMuted ? "ЗВУК: ВЫКЛ" : "ЗВУК: ВКЛ";
+        startGame();
     }
 
     function startGame() {
-        document.getElementById('scr-menu').classList.remove('active');
-        document.getElementById('scr-game').classList.add('active');
+        goToScreen('scr-game');
         
-        // Сброс
         snake = [{x: 10, y: 10}, {x: 9, y: 10}];
         dir = 'right'; nextDir = 'right';
         score = 0;
         level = 1;
         obstacles = [];
-        tempo = 200;
+        resetColors();
 
-        // Если режим 2 (Стены), добавляем препятствия
         if(mode === 1) generateObstacles();
-        
         spawnFood();
-        applyTheme(0);
-        updateUI();
-        
-        if(!isMuted) startMusic();
+        updateGameUI();
         
         if(gameLoop) clearInterval(gameLoop);
-        gameLoop = setInterval(step, 130);
+        gameLoop = setInterval(step, 150);
+        requestAnimationFrame(animLoop); // Для анимации градиентов
     }
 
     function stopGame() {
         clearInterval(gameLoop);
-        clearInterval(musicInterval);
-        document.getElementById('scr-game').classList.remove('active');
-        document.getElementById('scr-menu').classList.add('active');
-        document.getElementById('app').classList.remove('shake-screen');
-        updateBestScore();
+        goToScreen('scr-menu');
     }
 
-    function input(d) {
-        const opp = {up:'down', down:'up', left:'right', right:'left'};
-        if(d !== opp[dir]) {
-            nextDir = d;
-            playTone(300, 'sine', 0.05); // Звук поворота
-        }
+    function resetColors() {
+        currentWallColor = '#ff69b4';
+        document.getElementById('canvas').style.borderColor = currentWallColor;
+        document.getElementById('canvas').style.background = "rgba(255, 255, 255, 0.5)";
     }
 
-    // Управление клавиатурой
-    window.onkeydown = e => {
-        if(e.key === 'ArrowUp') input('up');
-        if(e.key === 'ArrowDown') input('down');
-        if(e.key === 'ArrowLeft') input('left');
-        if(e.key === 'ArrowRight') input('right');
-    };
+    function changeLevelColors() {
+        // Рандомный цвет стен/забора
+        currentWallColor = pastelColors[Math.floor(Math.random() * pastelColors.length)];
+        document.getElementById('canvas').style.borderColor = currentWallColor;
+        
+        // Рандомный нежный фон
+        const bgC = pastelColors[Math.floor(Math.random() * pastelColors.length)];
+        document.getElementById('canvas').style.background = bgC + "80"; // 50% прозрачности
+    }
 
     function generateObstacles() {
         obstacles = [];
-        // 5 случайных стенок внутри поля
         for(let i=0; i<5; i++) {
             obstacles.push({
                 x: Math.floor(Math.random()*20),
@@ -326,11 +517,24 @@
         let valid = false;
         while(!valid) {
             food = {x: Math.floor(Math.random()*20), y: Math.floor(Math.random()*20)};
-            // Чтобы еда не появилась в змейке или препятствии
             valid = !snake.some(s => s.x === food.x && s.y === food.y) &&
                     !obstacles.some(o => o.x === food.x && o.y === food.y);
         }
     }
+
+    function input(d) {
+        const opp = {up:'down', down:'up', left:'right', right:'left'};
+        if(d !== opp[dir]) {
+            nextDir = d;
+            playTone(300, 'triangle', 0.05);
+        }
+    }
+    window.onkeydown = e => {
+        if(e.key === 'ArrowUp') input('up');
+        if(e.key === 'ArrowDown') input('down');
+        if(e.key === 'ArrowLeft') input('left');
+        if(e.key === 'ArrowRight') input('right');
+    };
 
     function step() {
         dir = nextDir;
@@ -341,137 +545,143 @@
         if(dir === 'left') head.x--;
         if(dir === 'right') head.x++;
 
-        // ОБРАБОТКА РЕЖИМОВ (Стены)
-        if(mode === 1) { // Режим СТЕНЫ: проходим сквозь, но есть препятствия
+        // Стены
+        if(mode === 1) { // Проход сквозь
             if(head.x < 0) head.x = 19;
             if(head.x >= 20) head.x = 0;
             if(head.y < 0) head.y = 19;
             if(head.y >= 20) head.y = 0;
-            
-            // Столкновение с препятствием = смерть
-            if(obstacles.some(o => o.x === head.x && o.y === head.y)) {
-                gameOver(); return;
-            }
-        } else { // Режимы 0 и 2: Стены убивают
-            if(head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20) {
-                gameOver(); return;
-            }
+            if(obstacles.some(o => o.x === head.x && o.y === head.y)) { gameOver(); return; }
+        } else { // Убивают
+            if(head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20) { gameOver(); return; }
         }
 
-        // ОБРАБОТКА ХВОСТА
-        // Режим 2 (Призрак): хвост не убивает. Остальные режимы: убивает.
-        if(mode !== 2) {
-            if(snake.some(s => s.x === head.x && s.y === head.y)) {
-                gameOver(); return;
-            }
+        // Хвост
+        if(mode !== 2) { // Призрак сквозь себя
+            if(snake.some(s => s.x === head.x && s.y === head.y)) { gameOver(); return; }
         }
 
         snake.unshift(head);
 
-        // ЕДА
         if(head.x === food.x && head.y === food.y) {
             score++;
-            playTone(600, 'square', 0.1); // Звук поедания
-            
-            // Логика уровней (каждые 10 очков)
+            playTone(500, 'sine', 0.1);
             if(score % 10 === 0) {
                 level++;
-                playTone(800, 'sawtooth', 0.5); // Звук уровня
-                applyTheme(Math.floor(score/10) % themes.length);
-                updateMusicSpeed(level);
-                
-                // Если режим СТЕНЫ, меняем препятствия каждый уровень
+                playTone(600, 'square', 0.3);
+                changeLevelColors();
                 if(mode === 1) generateObstacles();
             }
-            
-            updateUI();
+            updateGameUI();
             spawnFood();
         } else {
             snake.pop();
         }
-
-        draw();
     }
 
-    function applyTheme(themeIndex) {
-        const color = themes[themeIndex];
-        const r = document.querySelector(':root');
-        r.style.setProperty('--neon', color);
-        
-        // Если уровень высокий (например, каждый 3-й десяток), экран трясется
-        const app = document.getElementById('app');
-        if(level > 1 && score % 10 === 0 && score > 0) {
-            // Кратковременная тряска при повышении уровня
-            app.classList.add('shake-screen');
-            setTimeout(() => app.classList.remove('shake-screen'), 1000);
-        }
-        
-        // Если уровень очень высокий (>5), легкая постоянная дрожь
-        if(level >= 5) {
-             // Можно добавить класс permanent-shake, если захочешь хардкора
-        }
-    }
-
-    function updateUI() {
+    function updateGameUI() {
         document.getElementById('score').innerText = score;
         document.getElementById('level').innerText = level;
     }
 
     function gameOver() {
-        playTone(150, 'sawtooth', 0.5); // Звук проигрыша
-        alert("Гейм овер! Счет: " + score);
+        playTone(100, 'sawtooth', 0.5);
+        // Начисление зменет
+        const earned = score; 
+        currentUser.balance += earned;
+        saveUsers();
         
-        // Сохранение рекорда
-        const key = 'pnake_best_' + modeDetails[mode].key;
-        const currentBest = parseInt(localStorage.getItem(key) || 0);
-        if(score > currentBest) {
-            localStorage.setItem(key, score);
-        }
-        
+        alert(`Игра окончена! Счет: ${score}\nЗаработано зменет: ${earned}`);
         stopGame();
+        updateMenuUI();
+    }
+
+    // --- ОТРИСОВКА (RENDER) ---
+    let animFrame = 0;
+    function animLoop() {
+        animFrame++;
+        draw();
+        if(document.getElementById('scr-game').classList.contains('active')) {
+            requestAnimationFrame(animLoop);
+        }
     }
 
     function draw() {
         const cvs = document.getElementById('canvas');
         const c = cvs.getContext('2d');
+        const box = 20;
+        
         c.clearRect(0,0,400,400);
 
-        // Отрисовка препятствий (только режим 1)
-        if(mode === 1) {
-            c.fillStyle = "#555";
-            c.shadowBlur = 0;
-            obstacles.forEach(o => {
-                c.fillRect(o.x*20+2, o.y*20+2, 16, 16);
-                // Крестик на препятствии
-                c.strokeStyle = "red";
-                c.beginPath();
-                c.moveTo(o.x*20+2, o.y*20+2); c.lineTo(o.x*20+18, o.y*20+18);
-                c.moveTo(o.x*20+18, o.y*20+2); c.lineTo(o.x*20+2, o.y*20+18);
-                c.stroke();
-            });
-        }
-
-        // Еда
-        c.fillStyle = "white"; // Белая сердцевина
-        c.shadowColor = getComputedStyle(document.documentElement).getPropertyValue('--neon');
-        c.shadowBlur = 15;
-        c.beginPath();
-        c.arc(food.x*20+10, food.y*20+10, 7, 0, Math.PI*2);
-        c.fill();
+        // Получаем скин змейки
+        const skinId = currentUser.equipped.color;
+        const skinObj = SHOP_ITEMS.colors.find(i => i.id === skinId) || SHOP_ITEMS.colors[0];
 
         // Змейка
-        c.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--neon');
         snake.forEach((s, i) => {
-            c.shadowBlur = i===0 ? 20 : 5; // Голова светится сильнее
-            c.fillRect(s.x*20+1, s.y*20+1, 18, 18);
+            let fill;
             
-            // Если режим Призрак, делаем хвост полупрозрачным
-            if(mode === 2 && i > 0) c.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--neon') + '80'; // 50% opacity
+            if(skinObj.type === 'color') {
+                fill = skinObj.val;
+            } else if (skinObj.type === 'stripe') {
+                fill = i % 2 === 0 ? skinObj.val[0] : (skinObj.val[1] || skinObj.val[0]);
+                if(skinObj.val.length > 2) fill = skinObj.val[i % skinObj.val.length];
+            } else if (skinObj.type === 'anim') {
+                // Градиенты
+                let grad = c.createLinearGradient(s.x*box, s.y*box, s.x*box+box, s.y*box+box);
+                const shift = animFrame * 2;
+                if(skinObj.val === 'rainbow') {
+                    grad.addColorStop(0, `hsl(${shift % 360}, 100%, 50%)`);
+                    grad.addColorStop(1, `hsl(${(shift+60) % 360}, 100%, 50%)`);
+                } else if(skinObj.val === 'gold') {
+                    grad.addColorStop(0, '#FFD700'); grad.addColorStop(0.5, '#FFFACD'); grad.addColorStop(1, '#DAA520');
+                } else { // Silver
+                    grad.addColorStop(0, '#C0C0C0'); grad.addColorStop(0.5, '#FFFFFF'); grad.addColorStop(1, '#A9A9A9');
+                }
+                fill = grad;
+            }
+
+            c.fillStyle = fill;
+            
+            // Прозрачность для призрака
+            if(mode === 2 && i > 0) c.globalAlpha = 0.5;
+            
+            c.fillRect(s.x*box, s.y*box, box, box);
+            c.globalAlpha = 1.0;
+            
+            // Глазки для головы
+            if(i === 0) {
+                c.fillStyle = '#000';
+                c.beginPath(); c.arc(s.x*box+6, s.y*box+6, 2, 0, Math.PI*2); c.fill();
+                c.beginPath(); c.arc(s.x*box+14, s.y*box+6, 2, 0, Math.PI*2); c.fill();
+            }
         });
+
+        // Еда
+        const foodId = currentUser.equipped.food;
+        const foodObj = SHOP_ITEMS.food.find(i => i.id === foodId) || SHOP_ITEMS.food[0];
+        
+        if(foodObj.cat === 'base' && foodObj.val === '●') {
+            c.fillStyle = "red";
+            c.beginPath(); c.arc(food.x*box+10, food.y*box+10, 8, 0, Math.PI*2); c.fill();
+        } else {
+            c.font = "18px serif";
+            c.textAlign = "center";
+            c.textBaseline = "middle";
+            c.fillText(foodObj.val, food.x*box+10, food.y*box+10);
+        }
+
+        // Препятствия
+        if(mode === 1) {
+            c.fillStyle = "#555";
+            obstacles.forEach(o => {
+                c.fillRect(o.x*box, o.y*box, box, box);
+                c.strokeStyle = "red"; c.lineWidth = 2;
+                c.beginPath(); c.moveTo(o.x*box, o.y*box); c.lineTo(o.x*box+box, o.y*box+box); c.stroke();
+                c.beginPath(); c.moveTo(o.x*box+box, o.y*box); c.lineTo(o.x*box, o.y*box+box); c.stroke();
+            });
+        }
     }
-    
-    // Инициализация при загрузке
-    selectMode(0);
 </script>
 </body>
 </html>
