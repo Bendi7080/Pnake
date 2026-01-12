@@ -1,9 +1,0 @@
-{
-  "name": "Pnake",
-  "short_name": "Pnake",
-  "start_url": "pnake.html",
-  "display": "standalone",
-  "background_color": "#FFF0F5",
-  "theme_color": "#FF69B4",
-  "orientation": "portrait"
-}
